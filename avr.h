@@ -49,7 +49,7 @@ typedef unsigned int word;
 #define bit(b) (1UL << (b))
 
 typedef bool boolean;
-typedef uint8_t byte;
+typedef unsigned char byte;
 
 #ifdef __cplusplus
 } // extern "C"
