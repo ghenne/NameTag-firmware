@@ -30,15 +30,16 @@ MatrixDisplay::~MatrixDisplay()
 void MatrixDisplay::show()
 {
 	for(int row = 0; row < 8; ++row) {
-		bitClear(PORTB, latch_pin); // unset latch_pin
+		bitClear(PORTB, latch_pin); // clear latch
 		for(unsigned char *col = columns, *end = columns + 8*num; col < end; ++col) {
 			bitClear(PORTB, clock_pin);
 			bitWrite(PORTB, data_pin, bitRead(*col, row));
 			bitSet(PORTB, clock_pin);
 		}
+		PORTD = 0xFF; // avoid glowing of prev/next row
+		bitSet(PORTB, latch_pin); // set latch
 		// select row to be displayed
 		PORTD = ~(1 << row_order[row]);
-		bitSet(PORTB, latch_pin); // set latch_pin
 	}
 }
 
