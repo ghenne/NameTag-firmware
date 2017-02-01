@@ -6,6 +6,7 @@ class MatrixDisplay
 public:
 	MatrixDisplay(byte num=1);
 	~MatrixDisplay();
+	byte num() const { return num_; }
 	void show(); // show current content
 
 	void clearColumns(byte start, byte end);
@@ -20,6 +21,6 @@ private:
 	const byte clock_pin = 1; // SHCP / clock pin for shift register on PORTB 1
 	const byte latch_pin = 2; // STCP / latch pin for shift register on PORTB 2
 
-	byte num; // number of chained matrix displays
-	byte *columns; // display content of all matrices
+	byte num_; // number of chained matrix displays
+	byte *columns_; // display content of all matrices
 };

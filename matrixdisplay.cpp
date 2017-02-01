@@ -111,9 +111,9 @@ const byte col_order[] = {7,0,1,2,3,4,5,6};
 const byte row_order[] = {4,5,6,7,0,1,2,3};
 
 // constructor: initialize data structures
-MatrixDisplay::MatrixDisplay(byte num) : num(num)
+MatrixDisplay::MatrixDisplay(byte num) : num_(num)
 {
-	columns = static_cast<byte*>(malloc(8*num));
+	columns_ = static_cast<byte*>(malloc(8*num));
 	clearColumns(0, 8*num);
 
 	// declare selected pins of PortB as output
@@ -124,14 +124,14 @@ MatrixDisplay::MatrixDisplay(byte num) : num(num)
 
 MatrixDisplay::~MatrixDisplay()
 {
-	free(columns);
+	free(columns_);
 }
 
 void MatrixDisplay::show()
 {
 	for(int row = 0; row < 8; ++row) {
 		bitClear(PORTB, latch_pin); // clear latch
-		for(byte *col = columns, *end = columns + 8*num; col != end; ++col) {
+		for(byte *col = columns_, *end = columns_ + 8*num_; col != end; ++col) {
 			bitClear(PORTB, clock_pin);
 			bitWrite(PORTB, data_pin, bitRead(*col, row));
 			bitSet(PORTB, clock_pin);
@@ -148,7 +148,7 @@ byte* MatrixDisplay::columnPtr(byte column) const
 	static const byte mask = 0b111; // bit mask for last 3 bits
 	// reshuffle last 3 bits to match hardware wiring order
 	column = (column & ~mask) | col_order[column & mask];
-	return columns + column;
+	return columns_ + column;
 }
 
 void MatrixDisplay::clearColumns(byte start, byte end)
@@ -159,6 +159,8 @@ void MatrixDisplay::clearColumns(byte start, byte end)
 
 void MatrixDisplay::setPixel(byte row, byte column, byte value)
 {
+	if (row < 0 || row > 7 || column < 0 || column >= 8*num_)
+		return;
 	bitWrite(*columnPtr(column), row, value);
 }
 
