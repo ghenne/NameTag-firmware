@@ -1,6 +1,5 @@
 #include "matrixdisplay.h"
 #include "avr.h"
-#include <util/delay.h>
 
 // This tables stores the bit patterns required to display all ASCII
 // characters. Each letter is represented by up to 5 columns.
@@ -107,14 +106,14 @@ const byte LETTERS[] = {
 // PORT B (3 pins) is used to feed the shift registers
 
 // row / column re-ordering
-const byte col_order[] = {7,0,1,2,3,4,5,6};
+const byte col_order[] = {7,6,5,4,3,2,1,0};
 const byte row_order[] = {4,5,6,7,0,1,2,3};
 
 // constructor: initialize data structures
-MatrixDisplay::MatrixDisplay(byte num) : num_(num)
+MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 {
-	columns_ = static_cast<byte*>(malloc(8*num));
-	clearColumns(0, 8*num);
+	columns_ = static_cast<byte*>(malloc(cols_));
+	clearColumns(0, cols_);
 
 	// declare selected pins of PortB as output
 	DDRB |= (1 << data_pin) | (1 << clock_pin) | (1 << latch_pin);
@@ -127,11 +126,11 @@ MatrixDisplay::~MatrixDisplay()
 	free(columns_);
 }
 
-void MatrixDisplay::show()
+void MatrixDisplay::show() const
 {
 	for(int row = 0; row < 8; ++row) {
 		bitClear(PORTB, latch_pin); // clear latch
-		for(byte *col = columns_, *end = columns_ + 8*num_; col != end; ++col) {
+		for(byte *col = columns_, *end = columns_ + cols_; col != end; ++col) {
 			bitClear(PORTB, clock_pin);
 			bitWrite(PORTB, data_pin, bitRead(*col, row));
 			bitSet(PORTB, clock_pin);
@@ -153,22 +152,35 @@ byte* MatrixDisplay::columnPtr(byte column) const
 
 void MatrixDisplay::clearColumns(byte start, byte end)
 {
+	if (start < 0) start = 0;
+	if (end > cols_) end = cols_;
+
 	for(; start != end; ++start)
 		*columnPtr(start) = 0;
 }
 
 void MatrixDisplay::setPixel(byte row, byte column, byte value)
 {
-	if (row < 0 || row > 7 || column < 0 || column >= 8*num_)
+	if (row < 0 || row > 7 || column < 0 || column >= cols_)
 		return;
 	bitWrite(*columnPtr(column), row, value);
 }
 
-void MatrixDisplay::setChar(unsigned char ch, byte column, byte row)
+byte MatrixDisplay::setChar(unsigned char ch, byte column)
 {
-	if (ch < 32 || ch > 127) return;
-	const byte *start = LETTERS + 6*(ch - 32) + 1;
-	const byte *end = start + *(start-1);
-	for (; start != end; ++start, ++column)
-		*columnPtr(column) = *start;
+	const byte *start = LETTERS + 6*(ch - 32);
+	byte width = *start; ++start;
+	const byte *end = start + width;
+	for (; start != end; ++start, ++column) {
+		if (column >= 0 && column < cols_)
+			*columnPtr(column) = *start;
+	}
+	return width;
+}
+
+void MatrixDisplay::setString(const char *s, char column, char spacing) {
+	while (*s != 0) {
+		column += spacing + setChar(*s, column);
+		++s;
+	}
 }

@@ -6,12 +6,15 @@ class MatrixDisplay
 public:
 	MatrixDisplay(byte num=1);
 	~MatrixDisplay();
-	byte num() const { return num_; }
-	void show(); // show current content
+	byte num() const { return cols_ / 8; }
+	void show() const; // show current content
 
 	void clearColumns(byte start, byte end);
 	void setPixel(byte row, byte column, byte value);
-	void setChar(unsigned char ch, byte column, byte row);
+	// set matrix display to write character at column
+	byte setChar(unsigned char ch, byte column);
+	// set matrix display to write string at column
+	void setString(const char *s, char column, char spacing=1);
 
 protected:
 	byte *columnPtr(byte column) const;
@@ -21,6 +24,6 @@ private:
 	const byte clock_pin = 1; // SHCP / clock pin for shift register on PORTB 1
 	const byte latch_pin = 2; // STCP / latch pin for shift register on PORTB 2
 
-	byte num_; // number of chained matrix displays
+	const byte cols_; // number of overall columns (8*num())
 	byte *columns_; // display content of all matrices
 };
