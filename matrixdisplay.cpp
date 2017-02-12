@@ -113,12 +113,13 @@ const byte row_order[] = {4,5,6,7,0,1,2,3};
 MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 {
 	columns_ = static_cast<byte*>(malloc(cols_));
-	clearColumns(0, cols_);
 
 	// declare selected pins of PortB as output
 	DDRB |= (1 << data_pin) | (1 << clock_pin) | (1 << latch_pin);
 	// set all eight pin of PortD as output
 	DDRD = 0xFF;
+
+	clearColumns(0, cols_);
 }
 
 MatrixDisplay::~MatrixDisplay()
@@ -150,13 +151,19 @@ byte* MatrixDisplay::columnPtr(byte column) const
 	return columns_ + column;
 }
 
-void MatrixDisplay::clearColumns(byte start, byte end)
+void MatrixDisplay::clearColumns(char start, char end)
 {
 	if (start < 0) start = 0;
 	if (end > cols_) end = cols_;
 
-	for(; start != end; ++start)
+	for(; start < end; ++start)
 		*columnPtr(start) = 0;
+}
+
+void MatrixDisplay::setColumn(char column, byte value)
+{
+	if (column >= 0 && column < cols_)
+		*columnPtr(column) = value;
 }
 
 void MatrixDisplay::setPixel(byte row, byte column, byte value)
@@ -171,16 +178,47 @@ byte MatrixDisplay::setChar(unsigned char ch, byte column)
 	const byte *start = LETTERS + 6*(ch - 32);
 	byte width = *start; ++start;
 	const byte *end = start + width;
-	for (; start != end; ++start, ++column) {
-		if (column >= 0 && column < cols_)
-			*columnPtr(column) = *start;
-	}
+	for (; start != end; ++start, ++column)
+		setColumn(column, *start);
 	return width;
 }
 
-void MatrixDisplay::setString(const char *s, char column, char spacing) {
+char MatrixDisplay::setString(const char *s, char column, char spacing) {
 	while (*s != 0) {
-		column += spacing + setChar(*s, column);
+		column += setChar(*s, column);
+		clearColumns(column, column+spacing);
+		column += spacing;
 		++s;
 	}
+	return column;
+}
+
+byte MatrixDisplay::width(const char *s, char spacing)
+{
+	byte column = 0;
+	while (*s != 0) {
+		column += spacing + LETTERS[6 * (*s - 32)];
+		++s;
+	}
+	return column;
+}
+
+const char* MatrixDisplay::formatInt(int value)
+{
+	const byte LEN = 10; // number of digits
+	static char digits[LEN];
+	byte digit = LEN-1;
+	digits[digit--] = '\0'; // terminating '\0'
+	digits[digit] = '0'; // zero display if value == 0
+
+	bool neg = (value < 0);
+	value = abs(value);
+
+	for (; digit != 0 && value != 0; --digit) {
+		digits[digit] = '0' + (value % 10);
+		value = value / 10;
+	}
+
+	if (neg) digits[digit] = '-';
+	return digits + digit;
 }

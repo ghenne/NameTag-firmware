@@ -6,15 +6,23 @@ class MatrixDisplay
 public:
 	MatrixDisplay(byte num=1);
 	~MatrixDisplay();
-	byte num() const { return cols_ / 8; }
+	inline byte num() const { return cols_ / 8; }
+	inline byte cols() const { return cols_; }
+
 	void show() const; // show current content
 
-	void clearColumns(byte start, byte end);
+	void clearColumns(char start, char end);
+	void setColumn(char column, byte value);
+
 	void setPixel(byte row, byte column, byte value);
 	// set matrix display to write character at column
 	byte setChar(unsigned char ch, byte column);
 	// set matrix display to write string at column
-	void setString(const char *s, char column, char spacing=1);
+	char setString(const char *s, char column=0, char spacing=1);
+	// compute width (in columns) of text
+	static byte width(const char *s, char spacing=1);
+	// turn value into string
+	const char* formatInt(int value);
 
 protected:
 	byte *columnPtr(byte column) const;
