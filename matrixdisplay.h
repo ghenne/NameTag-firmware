@@ -11,6 +11,7 @@ public:
 
 	void show() const; // show current content
 
+	inline void clear() { clearColumns(0, cols_); }
 	void clearColumns(char start, char end);
 	void setColumn(char column, byte value);
 

@@ -119,7 +119,7 @@ MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 	// set all eight pin of PortD as output
 	DDRD = 0xFF;
 
-	clearColumns(0, cols_);
+	clear();
 }
 
 MatrixDisplay::~MatrixDisplay()

@@ -7,9 +7,11 @@ set(AVR_PROGRAMMER usbasp)
 
 add_avr_executable(${PROJECT_NAME}
    main.cpp
+   nametag_sm.cpp
 
    matrixdisplay.cpp
    nametag.cpp
+   statemachine.h
    timing.c
    avr.h
 )

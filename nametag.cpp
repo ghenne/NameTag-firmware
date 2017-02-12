@@ -22,10 +22,11 @@ void NameTag::shift()
 		start_col_ = 7;
 }
 
-void NameTag::setText(const char* text)  //sets a new string text
+void NameTag::setText(const char* text)  // sets a new string text
 {
 	text_ = text;
 
+	clear();
 	// need to recompute actual shift mode?
 	if (shift_mode_ & AUTO_SHIFT)
 		setShiftMode(AUTO_SHIFT);
