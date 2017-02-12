@@ -44,12 +44,17 @@ extern "C" {
 #define _NOP() do { __asm__ volatile ("nop"); } while (0)
 #endif
 
-typedef unsigned int word;
 
 #define bit(b) (1UL << (b))
 
-typedef bool boolean;
+typedef unsigned int word;
 typedef unsigned char byte;
+
+void init();
+unsigned long millis(void);
+unsigned long micros(void);
+void delay(unsigned long);
+void delayMicroseconds(unsigned int us);
 
 #ifdef __cplusplus
 } // extern "C"
