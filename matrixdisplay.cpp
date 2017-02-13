@@ -112,6 +112,7 @@ const byte row_order[] = {4,5,6,7,0,1,2,3};
 // constructor: initialize data structures
 MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 {
+	// allocate memory for (columnwise) display content
 	columns_ = static_cast<byte*>(malloc(cols_));
 
 	// declare selected pins of PortB as output
@@ -122,11 +123,13 @@ MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 	clear();
 }
 
+// destructor: free resources
 MatrixDisplay::~MatrixDisplay()
 {
 	free(columns_);
 }
 
+// display content of columns_ by feeding the shift registers
 void MatrixDisplay::show() const
 {
 	for(int row = 0; row < 8; ++row) {
@@ -143,6 +146,7 @@ void MatrixDisplay::show() const
 	}
 }
 
+// returns pointer to given column (considering col_order permutation)
 byte* MatrixDisplay::columnPtr(byte column) const
 {
 	static const byte mask = 0b111; // bit mask for last 3 bits
@@ -151,6 +155,7 @@ byte* MatrixDisplay::columnPtr(byte column) const
 	return columns_ + column;
 }
 
+// clear content of columns start to end
 void MatrixDisplay::clearColumns(char start, char end)
 {
 	if (start < 0) start = 0;
@@ -160,12 +165,14 @@ void MatrixDisplay::clearColumns(char start, char end)
 		*columnPtr(start) = 0;
 }
 
+// set the column content of given column to given byte value
 void MatrixDisplay::setColumn(char column, byte value)
 {
 	if (column >= 0 && column < cols_)
 		*columnPtr(column) = value;
 }
 
+// set a single pixel
 void MatrixDisplay::setPixel(byte row, byte column, byte value)
 {
 	if (row < 0 || row > 7 || column < 0 || column >= cols_)
@@ -173,6 +180,7 @@ void MatrixDisplay::setPixel(byte row, byte column, byte value)
 	bitWrite(*columnPtr(column), row, value);
 }
 
+// write a single char, starting at column
 byte MatrixDisplay::setChar(unsigned char ch, byte column)
 {
 	const byte *start = LETTERS + 6*(ch - 32);
@@ -183,6 +191,7 @@ byte MatrixDisplay::setChar(unsigned char ch, byte column)
 	return width;
 }
 
+// write a string, starting at column
 char MatrixDisplay::setString(const char *s, char column, char spacing) {
 	while (*s != 0) {
 		column += setChar(*s, column);
@@ -193,6 +202,7 @@ char MatrixDisplay::setString(const char *s, char column, char spacing) {
 	return column;
 }
 
+// determine the width of the given string
 byte MatrixDisplay::width(const char *s, char spacing)
 {
 	byte column = 0;
@@ -203,6 +213,7 @@ byte MatrixDisplay::width(const char *s, char spacing)
 	return column;
 }
 
+// converts an integer to a string
 const char* MatrixDisplay::formatInt(int value)
 {
 	const byte LEN = 10; // number of digits

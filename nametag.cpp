@@ -6,6 +6,7 @@ NameTag::NameTag(byte num)
 {
 }
 
+// shift text, depending on shift_mode_ and shift_speed_
 void NameTag::update() {
 	if (shift_mode_ & SHIFT) {
 		if (++shift_count_ == shift_speed_) {
@@ -15,6 +16,7 @@ void NameTag::update() {
 	}
 }
 
+// shift text by one column and start over if nothing is shown anymore
 void NameTag::shift()
 {
 	--start_col_;
@@ -22,7 +24,8 @@ void NameTag::shift()
 		start_col_ = 7;
 }
 
-void NameTag::setText(const char* text)  // sets a new string text
+// display (and remember) text (for future shifting)
+void NameTag::setText(const char* text)
 {
 	text_ = text;
 
@@ -32,7 +35,7 @@ void NameTag::setText(const char* text)  // sets a new string text
 		setShiftMode(AUTO_SHIFT);
 }
 
-void NameTag::setShiftMode(NameTag::ShiftMode mode) //sets the shiftmode
+void NameTag::setShiftMode(NameTag::ShiftMode mode)
 {
 	shift_mode_ = mode;
 	if (shift_mode_ & AUTO_SHIFT) {        // if the shift mode is auto,
@@ -46,6 +49,6 @@ void NameTag::setShiftMode(NameTag::ShiftMode mode) //sets the shiftmode
 		setString(text_, start_col_ = 0);
 }
 
-void NameTag::setShiftSpeed(int speed) {  //sets the shift speed
+void NameTag::setShiftSpeed(int speed) {
 	shift_speed_ = speed;
 }
