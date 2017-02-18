@@ -18,7 +18,7 @@ const byte LETTERS[] = {
    5, 0b00101000, 0b00011000, 0b00001110, 0b00011000, 0b00101000, // *
    5, 0b00001000, 0b00001000, 0b00111110, 0b00001000, 0b00001000, // +
    2, 0b10110000, 0b01110000, 0b00000000, 0b00000000, 0b00000000, // ,
-   4, 0b00001000, 0b00001000, 0b00001000, 0b00001000, 0b00000000, // -
+   3, 0b00001000, 0b00001000, 0b00001000, 0b00001000, 0b00000000, // -
    2, 0b01100000, 0b01100000, 0b00000000, 0b00000000, 0b00000000, // .
    4, 0b01100000, 0b00011000, 0b00000110, 0b00000001, 0b00000000, // /
    4, 0b00111110, 0b01000001, 0b01000001, 0b00111110, 0b00000000, // 0
@@ -181,8 +181,9 @@ void MatrixDisplay::setPixel(byte row, byte column, byte value)
 }
 
 // write a single char, starting at column
-byte MatrixDisplay::setChar(unsigned char ch, byte column)
+byte MatrixDisplay::setChar(char ch, byte column)
 {
+	if (ch < 32 || ch > 127) ch = '?';
 	const byte *start = LETTERS + 6*(ch - 32);
 	byte width = *start; ++start;
 	const byte *end = start + width;
@@ -214,22 +215,27 @@ byte MatrixDisplay::width(const char *s, char spacing)
 }
 
 // converts an integer to a string
-const char* MatrixDisplay::formatInt(int value)
+char* MatrixDisplay::formatInt(char* digits, byte size, int value)
 {
-	const byte LEN = 10; // number of digits
-	static char digits[LEN];
-	byte digit = LEN-1;
-	digits[digit--] = '\0'; // terminating '\0'
-	digits[digit] = '0'; // zero display if value == 0
+	if (size < 3) return digits;
 
-	bool neg = (value < 0);
-	value = abs(value);
+	digits[--size] = '\0'; // terminating '\0'
+	digits[--size] = '0'; // zero display if value == 0
 
-	for (; digit != 0 && value != 0; --digit) {
-		digits[digit] = '0' + (value % 10);
+	bool neg = false;
+	if (value < 0) {
+		neg = true;
+		value = -value;
+	} else if (value == 0)
+		--size;
+
+	for (; size != 0 && value != 0; --size) {
+		digits[size] = '0' + (value % 10);
 		value = value / 10;
 	}
 
-	if (neg) digits[digit] = '-';
-	return digits + digit;
+	if (neg) digits[size] = '-';
+	else ++size;
+
+	return digits + size;
 }

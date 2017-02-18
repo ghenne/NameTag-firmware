@@ -17,13 +17,13 @@ public:
 
 	void setPixel(byte row, byte column, byte value);
 	// set matrix display to write character at column
-	byte setChar(unsigned char ch, byte column);
+	byte setChar(char ch, byte column);
 	// set matrix display to write string at column
 	char setString(const char *s, char column=0, char spacing=1);
 	// compute width (in columns) of text
 	static byte width(const char *s, char spacing=1);
-	// turn value into string
-	const char* formatInt(int value);
+	// write integer value into string digits of max size
+	char *formatInt(char *digits, byte size, int value);
 
 protected:
 	byte *columnPtr(byte column) const;
