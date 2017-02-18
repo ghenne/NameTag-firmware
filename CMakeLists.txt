@@ -13,7 +13,7 @@ add_avr_library(${PROJECT_NAME}
    avr.h
 )
 
-if(0)
+if(1)
 
 add_avr_executable(main
    main.cpp

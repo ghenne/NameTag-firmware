@@ -16,7 +16,9 @@ public:
 
 	void shift();
 	void setShiftMode(ShiftMode mode);
-	void setShiftSpeed(int speed);
+	void setShiftSpeed(byte speed);
+
+	byte shiftSpeed() const { return shift_speed_; }
 
 private:
 	const char* text_;

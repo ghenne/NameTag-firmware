@@ -28,5 +28,6 @@ int main(void)
 }
 
 ISR(PCINT1_vect) {
+	delayMicroseconds(500);
 	have_input = CHANGE;
 }

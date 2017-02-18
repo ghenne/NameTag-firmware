@@ -6,12 +6,12 @@
 #undef TRANSITION
 #define TRANSITION(s) {\
 	setState(STATE_CAST(&NameTagSM::s)); \
-	process(ENTER); \
+	process(ON_ENTRY); \
 }
 
 NameTagSM::NameTagSM(NameTag *display)
    : StateMachine(STATE_CAST(&NameTagSM::stateDefault))
-   , display(display)
+   , display(display), language(ENGLISH)
 {
 	// setup input pins
 	DDRC &= ~INPUT_MASK;
@@ -24,7 +24,7 @@ NameTagSM::NameTagSM(NameTag *display)
 
 void NameTagSM::stateDefault(byte event) // default state: print name
 {
-	if (event == ENTER) {
+	if (event == ON_ENTRY) {
 		display->setText(name_text);
 		return;
 	}
@@ -37,7 +37,7 @@ void NameTagSM::stateDefault(byte event) // default state: print name
 
 void NameTagSM::stateEnterMenu(byte event) // option state enter menu
 {
-	if (event == ENTER) {
+	if (event == ON_ENTRY) {
 		time = millis();
 		return;
 	}
@@ -56,27 +56,77 @@ void NameTagSM::stateEnterMenu(byte event) // option state enter menu
 
 void NameTagSM::stateMainMenu(byte event)
 {
-	static const char* mainMenuText[] = {"Language", "Display", "Settings"};
-	static char mainMenuItem = 1;
+	static const char* menuText[2][4] = {{"Language", "Display", "Settings","Return"},
+	                                     {"Sprache", "Anzeige", "Einstellungen","Zurück"}};
+	static char menuItem = 0;
 
-	if (event == ENTER)
-		menuEntries = mainMenuText;
+	if (event == ON_ENTRY)
+		menuItem = 2;
+
 	else if (event & CHANGE) { // only react to input changes
 		switch (event & INPUT_MASK) {
 		case BTN_DOWN:
-			if (--mainMenuItem < 0)
-				mainMenuItem = 2;
+			if (--menuItem < 0)
+				menuItem = 3;
 			break;
 		case BTN_UP:
-			if (++mainMenuItem >= 3)
-				mainMenuItem = 0;
+			if (++menuItem > 3)
+				menuItem = 0;
 			break;
 		case BTN_MENU:
-			switch (mainMenuItem) {
+			switch (menuItem) {
 			case 0:
+				TRANSITION(stateLanguageMenu);
+				break;
 			case 1:
+				// TRANSITION(stateDisplayMenu);
+				break;
 			case 2:
+				TRANSITION(stateSettingsMenu);
+				break;
+			case 3:
 				TRANSITION(stateDefault);
+				break;
+			}
+		default:
+			return;
+		}
+	} else {
+		display->update();
+		return;
+	}
+	display->setText(menuText[language][menuItem]);
+}
+
+void NameTagSM::stateSettingsMenu(byte event){
+
+	static const char* menuText[2][3] = {{"Shiftmode", "Shiftspeed", "Return"},
+	                                     {"Laufschrift modus", "Laufgeschwindigkeit", "Zurück"}};
+	static char menuItem = 1;
+
+	if (event == ON_ENTRY)
+		menuItem = 1;
+
+	else if (event & CHANGE) { // only react to input changes
+		switch (event & INPUT_MASK) {
+		case BTN_DOWN:
+			if (--menuItem < 0)
+				menuItem = 2;
+			break;
+		case BTN_UP:
+			if (++menuItem > 2)
+				menuItem = 0;
+			break;
+		case BTN_MENU:
+			switch (menuItem) {
+			case 0:
+				// TRANSITION(stateShiftMode);
+				break;
+			case 1:
+				TRANSITION(stateShiftSpeed);
+				break;
+			case 2:
+				TRANSITION(stateMainMenu);
 				break;
 			}
 		default:
@@ -88,7 +138,90 @@ void NameTagSM::stateMainMenu(byte event)
 	}
 
 	// display new menu text
-	display->setText(mainMenuText[mainMenuItem]);
+	display->setText(menuText[language][menuItem]);
+}
+
+void NameTagSM::stateShiftMode(byte event){
+
+}
+
+
+
+void NameTagSM::stateShiftSpeed(byte event){
+	static char menuItem = 0;
+
+	if (event == ON_ENTRY)
+		menuItem = display->shiftSpeed();
+
+	else if (event & CHANGE) { // only react to input changes
+		switch (event & INPUT_MASK) {
+		case BTN_DOWN:
+			if (--menuItem < 0)
+				menuItem = 21;
+			break;
+		case BTN_UP:
+			if (++menuItem > 21)
+				menuItem = 0;
+			break;
+		case BTN_MENU:
+			if (menuItem != 21) {
+				display->setShiftSpeed(menuItem);
+			}
+			TRANSITION(stateSettingsMenu);
+		default:
+			return; // all buttons released
+		}
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+
+	if (menuItem == 21) {
+		display->setText(language == ENGLISH ? "Return" : "Zurück");
+		return;
+	} else {
+		display->setText(display->formatInt(num_buffer, 10, menuItem));
+	}
+}
+
+void NameTagSM::stateLanguageMenu(byte event){
+
+	static const char* menuText[2][3] = {{"English", "German", "Return"},
+	                                     {"English", "Deutsch", "Zurück"}};
+
+	static char menuItem;
+
+	if (event == ON_ENTRY)
+		menuItem = language;
+
+	else if (event & CHANGE) { // only react to input changes
+		switch (event & INPUT_MASK) {
+		case BTN_DOWN:
+			if (--menuItem < 0)
+				menuItem = 2;
+			break;
+		case BTN_UP:
+			if (++menuItem > 2)
+				menuItem = 0;
+			break;
+		case BTN_MENU:
+			if (menuItem != 2)
+				language = static_cast<Language>(menuItem);
+			TRANSITION(stateMainMenu);
+		default:
+			return; // all buttons released
+		}
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+
+	// display new menu text
+	display->setText(menuText[language][menuItem]);
+}
+
+void NameTagSM::stateDisplayMenu(byte event){
+
 }
 
 #if 0

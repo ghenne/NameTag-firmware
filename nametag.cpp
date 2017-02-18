@@ -20,7 +20,7 @@ void NameTag::update() {
 void NameTag::shift()
 {
 	--start_col_;
-	if (setString(text_, start_col_) == 0)
+	if (setString(text_, start_col_) <= 0)
 		start_col_ = 7;
 }
 
@@ -49,6 +49,6 @@ void NameTag::setShiftMode(NameTag::ShiftMode mode)
 		setString(text_, start_col_ = 0);
 }
 
-void NameTag::setShiftSpeed(int speed) {
+void NameTag::setShiftSpeed(byte speed) {
 	shift_speed_ = speed;
 }

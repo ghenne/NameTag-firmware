@@ -2,7 +2,7 @@
 
 #include "statemachine.h"
 
-#define ENTER    bit(7)
+#define ON_ENTRY bit(7)
 #define CHANGE   bit(0)
 // these are the actual input pins (of PINC)
 #define BTN_DOWN bit(1)
@@ -14,11 +14,13 @@
 class NameTag;
 class NameTagSM : public StateMachine
 {
-	NameTag *display;
-	const char** menuEntries;
+	enum Language {ENGLISH = 0, DEUTSCH = 1};
 
+	NameTag *display;
+	Language language;
 	unsigned long time;
 	const char* name_text;
+	char num_buffer[10];
 
 public:
 	NameTagSM(NameTag *display);
@@ -32,4 +34,11 @@ private:
 	void stateDefault(byte event);
 	void stateEnterMenu(byte event);
 	void stateMainMenu(byte event);
+	void stateLanguageMenu(byte event);
+	void stateDisplayMenu(byte event);
+	void stateSettingsMenu(byte event);
+	void stateShiftMode(byte event);
+	void stateShiftSpeed(byte event);
+
+
 };
