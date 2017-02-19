@@ -22,7 +22,7 @@ public:
 
 private:
 	const char* text_;
-	char start_col_;
+	int  start_col_;
 	byte shift_mode_;
 	byte shift_count_ = 0;
 	byte shift_speed_ = 10;

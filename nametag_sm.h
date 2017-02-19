@@ -39,6 +39,4 @@ private:
 	void stateSettingsMenu(byte event);
 	void stateShiftMode(byte event);
 	void stateShiftSpeed(byte event);
-
-
 };

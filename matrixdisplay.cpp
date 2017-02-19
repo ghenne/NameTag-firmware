@@ -156,7 +156,7 @@ byte* MatrixDisplay::columnPtr(byte column) const
 }
 
 // clear content of columns start to end
-void MatrixDisplay::clearColumns(char start, char end)
+void MatrixDisplay::clearColumns(int start, int end)
 {
 	if (start < 0) start = 0;
 	if (end > cols_) end = cols_;
@@ -166,7 +166,7 @@ void MatrixDisplay::clearColumns(char start, char end)
 }
 
 // set the column content of given column to given byte value
-void MatrixDisplay::setColumn(char column, byte value)
+void MatrixDisplay::setColumn(int column, byte value)
 {
 	if (column >= 0 && column < cols_)
 		*columnPtr(column) = value;
@@ -181,7 +181,7 @@ void MatrixDisplay::setPixel(byte row, byte column, byte value)
 }
 
 // write a single char, starting at column
-byte MatrixDisplay::setChar(char ch, byte column)
+byte MatrixDisplay::setChar(char ch, int column)
 {
 	if (ch < 32 || ch > 127) ch = '?';
 	const byte *start = LETTERS + 6*(ch - 32);
@@ -193,7 +193,7 @@ byte MatrixDisplay::setChar(char ch, byte column)
 }
 
 // write a string, starting at column
-char MatrixDisplay::setString(const char *s, char column, char spacing) {
+int MatrixDisplay::setString(const char *s, int column, char spacing) {
 	while (*s != 0) {
 		column += setChar(*s, column);
 		clearColumns(column, column+spacing);
@@ -204,9 +204,9 @@ char MatrixDisplay::setString(const char *s, char column, char spacing) {
 }
 
 // determine the width of the given string
-byte MatrixDisplay::width(const char *s, char spacing)
+int MatrixDisplay::width(const char *s, char spacing)
 {
-	byte column = 0;
+	int column = 0;
 	while (*s != 0) {
 		column += spacing + LETTERS[6 * (*s - 32)];
 		++s;

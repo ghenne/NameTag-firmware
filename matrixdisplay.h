@@ -12,16 +12,16 @@ public:
 	void show() const; // show current content
 
 	inline void clear() { clearColumns(0, cols_); }
-	void clearColumns(char start, char end);
-	void setColumn(char column, byte value);
+	void clearColumns(int start, int end);
+	void setColumn(int column, byte value);
 
 	void setPixel(byte row, byte column, byte value);
 	// set matrix display to write character at column
-	byte setChar(char ch, byte column);
+	byte setChar(char ch, int column);
 	// set matrix display to write string at column
-	char setString(const char *s, char column=0, char spacing=1);
+	int setString(const char *s, int column=0, char spacing=1);
 	// compute width (in columns) of text
-	static byte width(const char *s, char spacing=1);
+	static int width(const char *s, char spacing=1);
 	// write integer value into string digits of max size
 	char *formatInt(char *digits, byte size, int value);
 
