@@ -120,7 +120,7 @@ void NameTagSM::stateSettingsMenu(byte event){
 		case BTN_MENU:
 			switch (menuItem) {
 			case 0:
-				// TRANSITION(stateShiftMode);
+				TRANSITION(stateShiftMode);
 				break;
 			case 1:
 				TRANSITION(stateShiftSpeed);
@@ -143,9 +143,48 @@ void NameTagSM::stateSettingsMenu(byte event){
 
 void NameTagSM::stateShiftMode(byte event){
 
+	static const char* menuText[2][4] = {{"Automatik", "Shifting everytime", "NO Shifting","Return"},
+	                                     {"Automatisch", "Immer Schieben", "Kein Schieben","Zurueck"}};
+	static char menuItem = 0;
+
+	if (event == ON_ENTRY)
+		menuItem = 0;
+
+	else if (event & CHANGE) { // only react to input changes
+		switch (event & INPUT_MASK) {
+		case BTN_DOWN:
+			if (--menuItem < 0)
+				menuItem = 3;
+			break;
+		case BTN_UP:
+			if (++menuItem > 3)
+				menuItem = 0;
+			break;
+		case BTN_MENU:
+			switch (menuItem) {
+			case 0:
+				display->setShiftMode(display->AUTO_SHIFT);
+				break;
+			case 1:
+				display->setShiftMode(display->SHIFT);
+				break;
+			case 2:
+				display->setShiftMode(display->NO_SHIFT);
+				break;
+			case 3:
+				TRANSITION(stateSettingsMenu);
+			}
+		default:
+			return; // all buttons released
+		}
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+
+	// display new menu text
+	display->setText(menuText[language][menuItem]);
 }
-
-
 
 void NameTagSM::stateShiftSpeed(byte event){
 	static char menuItem = 0;
