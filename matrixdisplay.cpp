@@ -213,7 +213,7 @@ byte MatrixDisplay::setChar(char ch, int column)
 
 // write a string, starting at column
 int MatrixDisplay::setString(const char *s, int column, char spacing) {
-	while (*s != 0) {
+	while (*s != 0 && column < cols_) {
 		column += setChar(*s, column);
 		clearColumns(column, column+spacing);
 		column += spacing;
@@ -222,12 +222,17 @@ int MatrixDisplay::setString(const char *s, int column, char spacing) {
 	return column;
 }
 
+inline int MatrixDisplay::width(char ch)
+{
+	return LETTERS[6 * (ch - 32)];
+}
+
 // determine the width of the given string
 int MatrixDisplay::width(const char *s, char spacing)
 {
 	int column = 0;
 	while (*s != 0) {
-		column += spacing + LETTERS[6 * (*s - 32)];
+		column += spacing + width(*s);
 		++s;
 	}
 	return column;

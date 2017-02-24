@@ -21,7 +21,8 @@ public:
 	byte shiftSpeed() const { return shift_speed_; }
 
 private:
-	const char* text_;
+	const char* text_;  // displayed text
+	const char* first_; // first visible character
 	int  start_col_;
 	byte shift_mode_;
 	byte shift_count_ = 0;

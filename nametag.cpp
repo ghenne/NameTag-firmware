@@ -20,14 +20,22 @@ void NameTag::update() {
 void NameTag::shift()
 {
 	--start_col_;
-	if (setString(text_, start_col_) <= 0)
+	if (setString(first_, start_col_) <= 0) {
+		first_ = text_;
 		start_col_ = 7;
+	} else { // should we advance to next start char?
+		byte w = width(*first_);
+		if (start_col_ + w < 0) {
+			++first_;
+			start_col_ += w+1; // char width + 1 column spacing
+		}
+	}
 }
 
 // display (and remember) text (for future shifting)
 void NameTag::setText(const char* text)
 {
-	text_ = text;
+	first_ = text_ = text;
 
 	clear();
 	// need to recompute actual shift mode?
