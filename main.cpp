@@ -16,7 +16,7 @@ int main(void)
 	PCMSK1 |= INPUT_MASK;
 	PCICR |= 1 << PCIE1; // pin-change interrupt enable for PCI1
 
-	NameTag m(1);
+	NameTag m(4);
 	NameTagSM sm(&m);
 
 	while(1) {
