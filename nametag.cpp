@@ -2,7 +2,7 @@
 
 NameTag::NameTag(byte num)
    : MatrixDisplay(num)
-   , start_col_(0), shift_mode_(AUTO_SHIFT), shift_count_(0), shift_speed_(10)
+   , start_col_(0), shift_mode_(AUTO_SHIFT), shift_count_(0), shift_speed_(5)
 {
 }
 

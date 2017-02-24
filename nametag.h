@@ -25,6 +25,6 @@ private:
 	const char* first_; // first visible character
 	int  start_col_;
 	byte shift_mode_;
-	byte shift_count_ = 0;
-	byte shift_speed_ = 10;
+	byte shift_count_;
+	byte shift_speed_;
 };

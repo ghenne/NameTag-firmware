@@ -19,7 +19,7 @@ NameTagSM::NameTagSM(NameTag *display)
 
 	name_text = "Tekkietorium - Felix Haschke & Fabian Umhang";
 	display->setText(name_text);
-	display->setShiftSpeed(15);
+	display->setShiftSpeed(5);
 }
 
 void NameTagSM::stateDefault(byte event) // default state: print name
