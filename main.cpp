@@ -11,10 +11,11 @@ int main(void)
 	// input buttons: pins PC 1-3
 	DDRC &= ~INPUT_MASK;
 	PORTC |= INPUT_MASK;
+	PORTC |= _BV(6); // pullup reset?
 
 	// handle input buttons as pin-change interrupts
 	PCMSK1 |= INPUT_MASK;
-	PCICR |= 1 << PCIE1; // pin-change interrupt enable for PCI1
+	PCICR |= _BV(PCIE1); // pin-change interrupt enable for PCI1
 
 	NameTag m(4);
 	NameTagSM sm(&m);

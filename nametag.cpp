@@ -51,12 +51,18 @@ void NameTag::setShiftMode(NameTag::ShiftMode mode)
 		bitWrite(shift_mode_, 0, shift); // set the second bit of shift_mode_ to
 		                                 // previously calculated state
 	}
-	if (shift_mode_ & SHIFT) // when shifting, start is last column
-		start_col_ = cols()-1;
+	if (shift_mode_ & SHIFT) // when shifting, start in column 7
+		start_col_ = 7;
 	else // otherwise, start in first column + setString once
 		setString(text_, start_col_ = 0);
 }
 
 void NameTag::setShiftSpeed(byte speed) {
 	shift_speed_ = speed;
+}
+
+byte NameTag::shiftMode(){
+	if(shift_mode_ & AUTO_SHIFT)
+		return 2;
+	return shift_mode_;
 }

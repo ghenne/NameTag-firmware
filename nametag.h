@@ -19,6 +19,7 @@ public:
 	void setShiftSpeed(byte speed);
 
 	byte shiftSpeed() const { return shift_speed_; }
+	byte shiftMode();
 
 private:
 	const char* text_;  // displayed text
