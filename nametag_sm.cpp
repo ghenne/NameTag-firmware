@@ -264,6 +264,19 @@ void NameTagSM::stateShiftSpeed(byte event){
 		default:
 			return; // all buttons released
 		}
+		time = millis() + 500;
+	} else if ((event & (BTN_DOWN | BTN_UP)) && millis() > time+250) {
+		time = millis();
+		switch (event & INPUT_MASK) {
+		case BTN_DOWN:
+			if (--menuItem < 0)
+				menuItem = 20;
+			break;
+		case BTN_UP:
+			if (++menuItem > 20)
+				menuItem = 0;
+			break;
+		}
 	} else { // no change
 		display->update();
 		return; // do not call setText()
