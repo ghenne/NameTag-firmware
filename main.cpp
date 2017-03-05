@@ -2,6 +2,12 @@
 #include "nametag.h"
 #include "nametag_sm.h"
 
+FUSES = {
+   LFUSE_DEFAULT | (byte)~FUSE_CKDIV8, // run at 8MHz
+   HFUSE_DEFAULT & FUSE_EESAVE, // protect EEPROM from erase
+   EFUSE_DEFAULT,
+};
+
 volatile byte have_input = 0;
 
 int main(void)

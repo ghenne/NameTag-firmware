@@ -10,6 +10,9 @@
 // mask of all input pins
 #define INPUT_MASK (BTN_DOWN | BTN_UP | BTN_MENU)
 
+#define MAX_NAME_LEN 64
+#define MAX_TEXT_LEN (MAX_NAME_LEN + 4)
+
 class NameTag;
 class NameTagSM : public StateMachine
 {
@@ -18,7 +21,7 @@ class NameTagSM : public StateMachine
 	NameTag *display;
 	Language language;
 	unsigned long time;
-	const char* name_text;
+	char name_text[MAX_TEXT_LEN];
 	char num_buffer[10];
 
 public:
@@ -48,14 +51,4 @@ private:
 
 	bool next_menuItem;
 	int selected_name;
-	const char* name_texts [8] = {
-	   "1: Felix",
-	   "2: Tekkietorium - Felix Haschke & Fabian Umhang",
-	   "3: Fabian",
-	   "4: Milan",
-	   "",
-	   "",
-	   "",
-	   ""
-	};
 };

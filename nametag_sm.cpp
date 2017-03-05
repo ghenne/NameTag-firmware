@@ -9,13 +9,20 @@
 	process(ON_ENTRY); \
 }
 
-struct {
-	byte shift_speed;
-	byte shift_mode;
-	byte language;
-	byte selected;
-	byte setupLanguage;
-} *EEPROM = NULL;
+byte EE_shift_speed EEMEM = 5;
+byte EE_shift_mode EEMEM = NameTag::AUTO_SHIFT;
+byte EE_language EEMEM = 0;
+byte EE_selected EEMEM = 0;
+char EE_names[8][MAX_TEXT_LEN] EEMEM = {
+   "1: Felix",
+   "2: Tekkietorium - Felix Haschke & Fabian Umhang",
+   "3: Fabian",
+   "4: Milan",
+   "5: ",
+   "6: ",
+   "7: ",
+   "8: "
+};
 
 NameTagSM::NameTagSM(NameTag *display)
    : StateMachine(STATE_CAST(&NameTagSM::stateDefault))
@@ -24,40 +31,20 @@ NameTagSM::NameTagSM(NameTag *display)
 	// setup input pins
 	DDRC &= ~INPUT_MASK;
 	PORTC |= INPUT_MASK;
-	selected_name = eeprom_read_byte(&EEPROM->selected);
-	// in case of new compiling to the prozessor, set the selected name to 0;
-	if(selected_name < 0 || selected_name > 7){
-		eeprom_update_byte(&EEPROM->selected,0);
-		selected_name = 0;
-	}
-	name_text = name_texts[selected_name] + 3;
 
-	display->setShiftSpeed(eeprom_read_byte(&EEPROM->shift_speed));
-	// if there was a new compiling to the prozessor, the Shiftspeed is -1, thats very slow
-	// here we set the Shiftspeed to 5 if this case is true
-	if(display->shiftSpeed() > 20){
-		eeprom_update_byte(&EEPROM->shift_speed,5);
-		display->setShiftSpeed(5);
-	}
+	selected_name = eeprom_read_byte(&EE_selected);
+	eeprom_read_block(name_text, EE_names[selected_name], MAX_TEXT_LEN);
+	display->setText(name_text + 3);
 
-
-#if 1
-	//eeprom_update_byte(&EEPROM->shift_speed, 5);
-	eeprom_update_byte(&EEPROM->shift_mode, NameTag::AUTO_SHIFT);
-	eeprom_update_byte(&EEPROM->language, ENGLISH);
-	//eeprom_update_byte(&EEPROM->selected, 0);
-#endif
-
-	display->setText(name_text);
-	//display->setShiftSpeed(eeprom_read_byte(&EEPROM->shift_speed));
-	display->setShiftMode((NameTag::ShiftMode)eeprom_read_byte(&EEPROM->shift_mode));
-	language = static_cast<Language>(eeprom_read_byte(&EEPROM->language));
+	display->setShiftSpeed(eeprom_read_byte(&EE_shift_speed));
+	display->setShiftMode(static_cast<NameTag::ShiftMode>(eeprom_read_byte(&EE_shift_mode)));
+	language = static_cast<Language>(eeprom_read_byte(&EE_language));
 }
 
 void NameTagSM::stateDefault(byte event) // default state: print name
 {
 	if (event == ON_ENTRY) {
-		display->setText(name_texts[selected_name]+3);
+		display->setText(name_text + 3);
 		return;
 	}
 
@@ -229,11 +216,11 @@ void NameTagSM::stateShiftMode(byte event){
 			switch (menuItem) {
 			case 0:
 				display->setShiftMode(display->AUTO_SHIFT);
-				//eeprom_update_byte(&EEPROM->shift_mode,display->AUTO_SHIFT);
+				//eeprom_update_byte(&shift_mode_ee,display->AUTO_SHIFT);
 				break;
 			case 1:
 				display->setShiftMode(display->SHIFT);
-				//eeprom_update_byte(&EEPROM->shift_mode,display->SHIFT);
+				//eeprom_update_byte(&shift_mode_ee,display->SHIFT);
 				break;
 			case 2:
 				next_menuItem = true;
@@ -270,7 +257,7 @@ void NameTagSM::stateShiftSpeed(byte event){
 		case BTN_MENU:
 			if (menuItem != 0) {
 				display->setShiftSpeed(menuItem);
-				eeprom_update_byte(&EEPROM->shift_speed, menuItem);
+				eeprom_update_byte(&EE_shift_speed, menuItem);
 			}
 			next_menuItem = true;
 			TRANSITION(stateSettingsMenu);
@@ -313,7 +300,7 @@ void NameTagSM::stateLanguageMenu(byte event){
 		case BTN_MENU:
 			if (menuItem != 2){
 				language = static_cast<Language>(menuItem);
-				eeprom_update_byte(&EEPROM->language, language);
+				eeprom_update_byte(&EE_language, language);
 			}
 			next_menuItem = true;
 			TRANSITION(stateMainMenu);
@@ -384,7 +371,7 @@ void NameTagSM::stateDisplayMenu(byte event){
 void NameTagSM::stateChangeName(byte event){
 	static const char* menuText[2][2] = {{"Return"},
 	                                     {"Zur""\x1f""ck"}};
-	static char menuItem = 0;//eeprom_read_byte(&EEPROM->selected);
+	static char menuItem = 0;//eeprom_read_byte(&selected_ee);
 
 	if (event == ON_ENTRY)
 		menuItem = 0;
@@ -392,21 +379,21 @@ void NameTagSM::stateChangeName(byte event){
 		switch (event & INPUT_MASK) {
 		case BTN_DOWN:
 			if (--menuItem < 0)
-				menuItem = 9;
+				menuItem = 8;
 			break;
 		case BTN_UP:
-			if (++menuItem > 9)
+			if (++menuItem > 8)
 				menuItem = 0;
 			break;
 		case BTN_MENU:
 			if(menuItem != 8) {
 				selected_name = menuItem;
-				display->setText(name_texts[menuItem]+3);
-				eeprom_update_byte(&EEPROM->selected, menuItem);
+				display->setText(name_text + 3);
+				eeprom_update_byte(&EE_selected, menuItem);
 			}
 			next_menuItem = true;
-			TRANSITION(stateDisplayMenu)
-			      return;
+			TRANSITION(stateDisplayMenu);
+			return;
 		default:
 			return; // all buttons released
 		}
@@ -421,7 +408,8 @@ void NameTagSM::stateChangeName(byte event){
 	}
 	else {
 		// display new menu text
-		display->setText(name_texts[menuItem]);
+		eeprom_read_block(name_text, EE_names[menuItem], MAX_TEXT_LEN);
+		display->setText(name_text);
 	}
 }
 void NameTagSM::stateCreateName(byte event){
@@ -558,14 +546,12 @@ void NameTagSM::stateResetSettings(byte event){
 		case BTN_MENU:
 			switch (menuItem) {
 			case 0:
-				eeprom_update_byte(&EEPROM->language,eeprom_read_byte(&EEPROM->setupLanguage));
-				language = (Language)eeprom_read_byte(&EEPROM->setupLanguage);
-				eeprom_update_byte(&EEPROM->selected,0);
-				selected_name = 0;
-				eeprom_update_byte(&EEPROM->shift_mode, NameTag::AUTO_SHIFT);
+				eeprom_update_byte(&EE_language, language = ENGLISH);
+				eeprom_update_byte(&EE_selected, selected_name = 0);
 				display->setShiftMode(NameTag::AUTO_SHIFT);
-				eeprom_update_byte(&EEPROM->shift_speed, 5);
+				eeprom_update_byte(&EE_shift_mode, display->shiftMode());
 				display->setShiftSpeed(5);
+				eeprom_update_byte(&EE_shift_speed, display->shiftSpeed());
 				next_menuItem = true;
 				TRANSITION(stateMainMenu);
 				break;

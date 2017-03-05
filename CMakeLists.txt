@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 project(NameTag)
 
 set(AVR_MCU atmega328p)
-set(MCU_SPEED 1000000UL)
+set(MCU_SPEED 8000000UL)
 set(AVR_PROGRAMMER usbasp)
+
+set(AVR_L_FUSE 0xE2) # 8 MHz clock
+set(AVR_H_FUSE 0xD1) # EESAVE: save EEPROM
 
 add_avr_library(${PROJECT_NAME}
    matrixdisplay.cpp
