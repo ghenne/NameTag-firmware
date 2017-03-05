@@ -18,7 +18,7 @@ public:
 	void setShiftMode(ShiftMode mode);
 	void setShiftSpeed(byte speed);
 
-	byte shiftSpeed() const { return shift_speed_; }
+	byte shiftSpeed() const { return shift_speed_ >> 3; }
 	byte shiftMode();
 
 private:

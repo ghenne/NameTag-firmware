@@ -2,8 +2,9 @@
 
 NameTag::NameTag(byte num)
    : MatrixDisplay(num)
-   , start_col_(0), shift_mode_(AUTO_SHIFT), shift_count_(0), shift_speed_(5)
+   , start_col_(0), shift_mode_(AUTO_SHIFT), shift_count_(0)
 {
+	setShiftSpeed(5);
 }
 
 // shift text, depending on shift_mode_ and shift_speed_
@@ -58,7 +59,7 @@ void NameTag::setShiftMode(NameTag::ShiftMode mode)
 }
 
 void NameTag::setShiftSpeed(byte speed) {
-	shift_speed_ = speed;
+	shift_speed_ = speed << 3;
 }
 
 byte NameTag::shiftMode(){
