@@ -28,6 +28,7 @@ public:
 	char *formatInt(char *digits, byte size, int value);
 
 protected:
+	static const byte *letterStart(char ch);
 	byte *columnPtr(byte column) const;
 
 private:

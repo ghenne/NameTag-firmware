@@ -4,8 +4,13 @@
 // This tables stores the bit patterns required to display all ASCII
 // characters. Each letter is represented by up to 5 columns.
 // First column specifies number of columns actually required.
+#define FIRST_LETTER (' ' - 3)
+#define LAST_LETTER '~'
 const byte LETTERS[] = {
-   3, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, // space
+   4, 0b00100000, 0b01010101, 0b01010101, 0b01111000, 0b00000000, // ä = 29
+   4, 0b00111000, 0b01000101, 0b01000101, 0b00111000, 0b00000000, // ö = 30
+   4, 0b00111100, 0b01000001, 0b01000001, 0b01111100, 0b00000000, // ü = 31
+   3, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, // space = 32
    1, 0b01011111, 0b00000000, 0b00000000, 0b00000000, 0b00000000, // !
    3, 0b00000011, 0b00000000, 0b00000011, 0b00000000, 0b00000000, // "
    5, 0b00010100, 0b00111110, 0b00010100, 0b00111110, 0b00010100, // #
@@ -31,7 +36,7 @@ const byte LETTERS[] = {
    4, 0b01100001, 0b00010001, 0b00001001, 0b00000111, 0b00000000, // 7
    4, 0b00110110, 0b01001001, 0b01001001, 0b00110110, 0b00000000, // 8
    4, 0b00000110, 0b01001001, 0b01001001, 0b00111110, 0b00000000, // 9
-   2, 0b01010000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, // :
+   2, 0b00101000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, // :
    2, 0b10000000, 0b01010000, 0b00000000, 0b00000000, 0b00000000, // ;
    3, 0b00010000, 0b00101000, 0b01000100, 0b00000000, 0b00000000, // <
    3, 0b00010100, 0b00010100, 0b00010100, 0b00000000, 0b00000000, // =
@@ -199,11 +204,15 @@ void MatrixDisplay::setPixel(byte row, byte column, byte value)
 	bitWrite(*columnPtr(column), row, value);
 }
 
+inline const byte* MatrixDisplay::letterStart(char ch) {
+	if (ch < FIRST_LETTER || ch > LAST_LETTER) ch = '?';
+	return LETTERS + 6*(ch - FIRST_LETTER);
+}
+
 // write a single char, starting at column
 byte MatrixDisplay::setChar(char ch, int column)
 {
-	if (ch < 32 || ch > 127) ch = '?';
-	const byte *start = LETTERS + 6*(ch - 32);
+	const byte *start = letterStart(ch);
 	byte width = *start; ++start;
 	const byte *end = start + width;
 	for (; start != end; ++start, ++column)
@@ -224,7 +233,7 @@ int MatrixDisplay::setString(const char *s, int column, char spacing) {
 
 inline int MatrixDisplay::width(char ch)
 {
-	return LETTERS[6 * (ch - 32)];
+	return *letterStart(ch);
 }
 
 // determine the width of the given string
