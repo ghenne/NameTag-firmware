@@ -23,15 +23,18 @@ class NameTagSM : public StateMachine
 	unsigned long time;
 	char name_text[MAX_TEXT_LEN];
 	char num_buffer[10];
+	int selected_name;
+	char next_menu_item;
 
 public:
 	NameTagSM(NameTag *display);
 
 private:
-#if 0
-	void eepromSetName (const char* text, byte number);
-	const char* eepromReadName(byte number);
-#endif
+	/// increment / decrement item based on UP/DOWN event
+	/// return true iff BTN_MENU was pressed
+	bool advance(byte event, char &item, const char max, const char min=0);
+	/// initialize menu item to next_menu_item or _default
+	void initMenuItem(char &item, const char _default, const char num);
 
 	void stateDefault(byte event);
 	void stateEnterMenu(byte event);
@@ -48,7 +51,4 @@ private:
 	void stateResetSettings(byte event);
 	void statehelpMenu(byte event);
 	void stateDisplayTest(byte event);
-
-	bool next_menuItem;
-	int selected_name;
 };

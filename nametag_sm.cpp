@@ -24,9 +24,12 @@ char EE_names[8][MAX_TEXT_LEN] EEMEM = {
    "8: "
 };
 
+#define MENU_ITEM_PREV    127
+#define MENU_ITEM_DEFAULT 126
+
 NameTagSM::NameTagSM(NameTag *display)
    : StateMachine(STATE_CAST(&NameTagSM::stateDefault))
-   , display(display), language(ENGLISH)
+   , display(display), language(ENGLISH), next_menu_item(MENU_ITEM_PREV)
 {
 	// setup input pins
 	DDRC &= ~INPUT_MASK;
@@ -39,6 +42,33 @@ NameTagSM::NameTagSM(NameTag *display)
 	display->setShiftSpeed(eeprom_read_byte(&EE_shift_speed));
 	display->setShiftMode(static_cast<NameTag::ShiftMode>(eeprom_read_byte(&EE_shift_mode)));
 	language = static_cast<Language>(eeprom_read_byte(&EE_language));
+}
+
+bool NameTagSM::advance(byte event, char& item, const char num, const char min) {
+	switch (event & INPUT_MASK) {
+	case BTN_DOWN:
+		if (--item < min)
+			item = num-1;
+		break;
+	case BTN_UP:
+		if (++item >= num)
+			item = min;
+		break;
+	case BTN_MENU:
+		return true;
+	}
+	return false;
+}
+
+void NameTagSM::initMenuItem(char& item, const char _default, const char num) {
+	if (next_menu_item == MENU_ITEM_PREV);
+	else if (next_menu_item == MENU_ITEM_DEFAULT)
+		item = _default;
+	else if (next_menu_item < 0)
+		item = num + next_menu_item;
+	else
+		item = next_menu_item;
+	next_menu_item = MENU_ITEM_PREV;
 }
 
 void NameTagSM::stateDefault(byte event) // default state: print name
@@ -94,24 +124,10 @@ void NameTagSM::stateMainMenu(byte event)
 	                                     }};
 	static char menuItem = 0;
 
-	if (event == ON_ENTRY){
-		menuItem = 1;
-	}
-	else if (next_menuItem == true){
-		menuItem = 6;
-		next_menuItem = false;
-	}
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 6;
-			break;
-		case BTN_UP:
-			if (++menuItem > 6)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, 1, 7);
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 7)) {
 			switch (menuItem) {
 			case 0:
 				TRANSITION(stateLanguageMenu);
@@ -135,7 +151,6 @@ void NameTagSM::stateMainMenu(byte event)
 				TRANSITION(stateDefault);
 				break;
 			}
-		default:
 			return;
 		}
 	} else {
@@ -149,27 +164,13 @@ void NameTagSM::stateSettingsMenu(byte event){
 
 	static const char* menuText[2][3] = {{"Shiftmode", "Shiftspeed", "Return"},
 	                                     {"Laufschrift modus", "Laufgeschwindigkeit", "Zur""\x1f""ck"}};
-	static char menuItem = 1;
+	static char menuItem = 0;
 
-	if (event == ON_ENTRY){
-		menuItem = 0;
-	}
-	else if (next_menuItem == true){
-		menuItem = 2;
-		next_menuItem = false;
-	}
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, 0, 3);
 
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 2;
-			break;
-		case BTN_UP:
-			if (++menuItem > 2)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 3)) {
 			switch (menuItem) {
 			case 0:
 				TRANSITION(stateShiftMode);
@@ -178,12 +179,10 @@ void NameTagSM::stateSettingsMenu(byte event){
 				TRANSITION(stateShiftSpeed);
 				break;
 			case 2:
-				next_menuItem = true;
 				TRANSITION(stateMainMenu);
 				break;
 			}
-		default:
-			return; // all buttons released
+			return;
 		}
 	} else { // no change
 		display->update();
@@ -196,38 +195,28 @@ void NameTagSM::stateSettingsMenu(byte event){
 
 void NameTagSM::stateShiftMode(byte event){
 
-	static const char* menuText[2][4] = {{"Automatik", "Shifting everytime", "Return"},
-	                                     {"Automatisch", "Immer Schieben", "Zur""\x1f""ck"}};
+	static const char* menuText[2][4] = {{"auto", "always", "Return"},
+	                                     {"auto", "immer", "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		menuItem = display->shiftMode();
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 3;
-			break;
-		case BTN_UP:
-			if (++menuItem > 3)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+		initMenuItem(menuItem, display->shiftMode(), 4);
+
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 4)) {
 			switch (menuItem) {
 			case 0:
-				display->setShiftMode(display->AUTO_SHIFT);
-				//eeprom_update_byte(&shift_mode_ee,display->AUTO_SHIFT);
+				display->setShiftMode(NameTag::AUTO_SHIFT);
 				break;
 			case 1:
-				display->setShiftMode(display->SHIFT);
-				//eeprom_update_byte(&shift_mode_ee,display->SHIFT);
+				display->setShiftMode(NameTag::SHIFT);
 				break;
 			case 2:
-				next_menuItem = true;
 				TRANSITION(stateSettingsMenu);
+				return;
 			}
-		default:
-			return; // all buttons released
+			eeprom_update_byte(&EE_shift_mode, display->shiftMode());
+			return;
 		}
 	} else { // no change
 		display->update();
@@ -238,45 +227,26 @@ void NameTagSM::stateShiftMode(byte event){
 	display->setText(menuText[language][menuItem]);
 }
 
-void NameTagSM::stateShiftSpeed(byte event){
-	static char menuItem = 1;
+void NameTagSM::stateShiftSpeed(byte event) {
+	const char MAX_SPEED = 20;
+	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		menuItem = display->shiftSpeed();
+		initMenuItem(menuItem, display->shiftSpeed(), MAX_SPEED);
 
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 20;
-			break;
-		case BTN_UP:
-			if (++menuItem > 20)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, MAX_SPEED)) {
 			if (menuItem != 0) {
 				display->setShiftSpeed(menuItem);
 				eeprom_update_byte(&EE_shift_speed, menuItem);
 			}
-			next_menuItem = true;
 			TRANSITION(stateSettingsMenu);
-		default:
-			return; // all buttons released
+			return;
 		}
 		time = millis() + 500;
 	} else if ((event & (BTN_DOWN | BTN_UP)) && millis() > time+250) {
 		time = millis();
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 20;
-			break;
-		case BTN_UP:
-			if (++menuItem > 20)
-				menuItem = 0;
-			break;
-		}
+		advance(event, menuItem, MAX_SPEED);
 	} else { // no change
 		display->update();
 		return; // do not call setText()
@@ -284,7 +254,6 @@ void NameTagSM::stateShiftSpeed(byte event){
 
 	if (menuItem == 0) {
 		display->setText(language == ENGLISH ? "Return" : "Zur""\x1f""ck");
-		return;
 	} else {
 		display->setText(display->formatInt(num_buffer, 10, menuItem));
 	}
@@ -295,30 +264,19 @@ void NameTagSM::stateLanguageMenu(byte event){
 	static const char* menuText[2][3] = {{"English", "German", "Return"},
 	                                     {"English", "Deutsch", "Zur""\x1f""ck"}};
 
-	static char menuItem;
+	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		menuItem = language;
+		initMenuItem(menuItem, language, 3);
 
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 2;
-			break;
-		case BTN_UP:
-			if (++menuItem > 2)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 3)) {
 			if (menuItem != 2){
 				language = static_cast<Language>(menuItem);
 				eeprom_update_byte(&EE_language, language);
 			}
-			next_menuItem = true;
 			TRANSITION(stateMainMenu);
-		default:
-			return; // all buttons released
+			return;
 		}
 	} else { // no change
 		display->update();
@@ -331,29 +289,15 @@ void NameTagSM::stateLanguageMenu(byte event){
 
 void NameTagSM::stateDisplayMenu(byte event){
 
-	static const char* menuText[2][4] = {{"Change Name", "Create Name", "Delete Name","Return"},
+	static const char* menuText[2][4] = {{"Change Name", "Create Name", "Delete Name", "Return"},
 	                                     {"Name wechseln", "Name hinzufuegen", "Name löschen", "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
-	if (event == ON_ENTRY){
-		menuItem = 0;
-	}
-	else if (next_menuItem == true){
-		menuItem = 3;
-		next_menuItem = false;
-	}
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, 0, 4);
 
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 3;
-			break;
-		case BTN_UP:
-			if (++menuItem > 3)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 4)) {
 			switch (menuItem) {
 			case 0:
 				TRANSITION(stateChangeName);
@@ -365,12 +309,10 @@ void NameTagSM::stateDisplayMenu(byte event){
 				//TRANSITION(stateDeleteName);
 				break;
 			case 3:
-				next_menuItem = true;
 				TRANSITION(stateMainMenu);
 				break;
 			}
-		default:
-			return; // all buttons released
+			return;
 		}
 	} else { // no change
 		display->update();
@@ -382,43 +324,30 @@ void NameTagSM::stateDisplayMenu(byte event){
 }
 
 void NameTagSM::stateChangeName(byte event){
-	static const char* menuText[2][2] = {{"Return"},
-	                                     {"Zur""\x1f""ck"}};
-	static char menuItem = 0;//eeprom_read_byte(&selected_ee);
+	static const char* menuText[2] = {"Return", "Zur""\x1f""ck"};
+	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		menuItem = 0;
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 8;
-			break;
-		case BTN_UP:
-			if (++menuItem > 8)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+		initMenuItem(menuItem, selected_name, 9);
+
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 9)) {
 			if(menuItem != 8) {
 				selected_name = menuItem;
 				display->setText(name_text + 3);
 				eeprom_update_byte(&EE_selected, menuItem);
 			}
-			next_menuItem = true;
 			TRANSITION(stateDisplayMenu);
 			return;
-		default:
-			return; // all buttons released
 		}
 	} else { // no change
 		display->update();
 		return; // do not call setText()
 	}
-	;
+
 	// display new menu text
-	if (menuItem == 8) {
-		display->setText(menuText[language][0]);
-	}
+	if (menuItem == 8)
+		display->setText(menuText[language]);
 	else {
 		// display new menu text
 		eeprom_read_block(name_text, EE_names[menuItem], MAX_TEXT_LEN);
@@ -444,25 +373,11 @@ void NameTagSM::stateTestsMenu(byte event){
 	                                      "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
-	if (event == ON_ENTRY){
-		menuItem = 0;
-	}
-	else if (next_menuItem == true){
-		menuItem = 2;
-		next_menuItem = false;
-	}
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, 0, 3);
 
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 2;
-			break;
-		case BTN_UP:
-			if (++menuItem > 2)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 3)) {
 			switch (menuItem) {
 			case 0:
 				TRANSITION(stateDisplayTest);
@@ -471,12 +386,11 @@ void NameTagSM::stateTestsMenu(byte event){
 				//TRANSITION(stateButtonTest);
 				break;
 			case 2:
-				next_menuItem = true;
+				next_menu_item = true;
 				TRANSITION(stateMainMenu);
 				break;
 			}
-		default:
-			return; // all buttons released
+			return;
 		}
 	} else { // no change
 		display->update();
@@ -488,53 +402,16 @@ void NameTagSM::stateTestsMenu(byte event){
 }
 
 void NameTagSM::stateDisplayTest(byte event){
-
-	static const char* menuText[2][3] = {{"Test the Display",
-	                                      "Test the Buttons",
-	                                      "Return"
-	                                     },
-	                                     {"Test des Displays",
-	                                      "Test der Taster",
-	                                      "Zur""\x1f""ck"}};
-	static char menuItem = 0;
-
-	if (event == ON_ENTRY){
-		menuItem = 0;
-	}
-	else if (next_menuItem == true){
-		menuItem = 2;
-		next_menuItem = false;
-	}
-
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-		case BTN_UP:
-		case BTN_MENU:
-			TRANSITION(stateTestsMenu);
-		default:
-			return; // all buttons released
-		}
+	if (event == ON_ENTRY) {
+		display->setText("\x29""\x30""\x31""0123456789");
+	} else if (event & CHANGE && event & INPUT_MASK) { // only react to input changes
+		TRANSITION(stateTestsMenu);
+		return;
 	} else { // no change
 		display->update();
 		return; // do not call setText()
 	}
-
-	// display new menu text
-	display->setChar(200,0);
-	display->setChar(200,4);
-	display->setChar(200,8);
-	display->setChar(200,12);
-	display->setChar(200,16);
-	display->setChar(200,20);
-	display->setChar(200,24);
-	display->setChar(200,28);
-	display->setChar(200,32);
-	display->setChar(200,36);
 }
-
-
-
 
 void NameTagSM::stateResetSettings(byte event){
 
@@ -545,18 +422,10 @@ void NameTagSM::stateResetSettings(byte event){
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		menuItem = display->shiftMode();
-	else if (event & CHANGE) { // only react to input changes
-		switch (event & INPUT_MASK) {
-		case BTN_DOWN:
-			if (--menuItem < 0)
-				menuItem = 1;
-			break;
-		case BTN_UP:
-			if (++menuItem > 1)
-				menuItem = 0;
-			break;
-		case BTN_MENU:
+		initMenuItem(menuItem, 0, 2);
+
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 2)) {
 			switch (menuItem) {
 			case 0:
 				eeprom_update_byte(&EE_language, language = ENGLISH);
@@ -565,15 +434,13 @@ void NameTagSM::stateResetSettings(byte event){
 				eeprom_update_byte(&EE_shift_mode, display->shiftMode());
 				display->setShiftSpeed(5);
 				eeprom_update_byte(&EE_shift_speed, display->shiftSpeed());
-				next_menuItem = true;
 				TRANSITION(stateMainMenu);
 				break;
 			case 1:
-				next_menuItem = true;
 				TRANSITION(stateMainMenu);
+				break;
 			}
-		default:
-			return; // all buttons released
+			return;
 		}
 	} else { // no change
 		display->update();
