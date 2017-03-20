@@ -358,6 +358,98 @@ void NameTagSM::stateChangeName(byte event){
 
 void NameTagSM::stateCreateName(byte event){
 
+	static const char* menuText[2][7] =
+	{{
+	    "Special character",
+	    "numbers",
+	    "capital Letters",
+	    "small Letters",
+	    "edit previous letter",
+	    "save name",
+	    "Return"
+	 },
+	 {
+	    "Sonderzeichen",
+	    "Zahlen",
+	    "Großbuchstaben",
+	    "Kleinbuchstaben",
+	    "vorheringen Buchstabe bearbeiten",
+	    "Name Speichern",
+	    "Zur""\x1f""ck"
+	 }};
+	/*
+	static char menuItem = 0;
+	static bool capitalization = 0;
+	static const char* Name;
+
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, 0, 31);
+
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 3)) {
+			if(menuItem >= 0 && menuItem < 26){
+				//*Name = menuItem;
+				//++Name;
+			}
+			else {
+				switch (menuItem) {
+				case 26:
+					//TRANSITION(stateCreateSpecialCharacterMenu);
+					break;
+				case 27:
+					//TRANSITION(stateCreateNumberMenu);
+					break;
+				case 28:
+					if(capitalization == false)
+						capitalization = true;
+					else
+						capitalization = false;
+					break;
+				case 29:
+					--Name;
+					break;
+				case 30:
+					display->setText(Name);
+					return;
+				case 31:
+					next_menu_item = MENU_ITEM_PREV;
+					TRANSITION(stateMainMenu);
+					break;
+				}
+				return;
+			}
+		}
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+
+	// display new menu text
+	if(menuItem >= 0 && menuItem < 26){
+		display->setChar(menuItem,5);
+	}
+	else switch (menuItem) {
+	case 26:
+		display->setText(menuText[language][0]);
+		break;
+	case 27:
+		display->setText(menuText[language][1]);
+		break;
+	case 28:
+		if (capitalization == false)
+			display->setText(menuText[language][2]);
+		else
+			display->setText(menuText[language][3]);
+		break;
+	case 29:
+	case 30:
+	case 31:
+		display->setText(menuText[language][menuItem-25]);
+		break;
+	default:
+		break;
+	}
+*/
 }
 
 void NameTagSM::stateDeleteName(byte event){
