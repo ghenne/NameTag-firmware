@@ -49,6 +49,6 @@ private:
 	void stateDeleteName(byte event);
 	void stateTestsMenu(byte event);
 	void stateResetSettings(byte event);
-	void statehelpMenu(byte event);
+	void stateHelpMenu(byte event);
 	void stateDisplayTest(byte event);
 };

@@ -29,7 +29,7 @@ char EE_names[8][MAX_TEXT_LEN] EEMEM = {
 
 NameTagSM::NameTagSM(NameTag *display)
    : StateMachine(STATE_CAST(&NameTagSM::stateDefault))
-   , display(display), language(ENGLISH), next_menu_item(MENU_ITEM_PREV)
+   , display(display), language(ENGLISH), next_menu_item(MENU_ITEM_DEFAULT)
 {
 	// setup input pins
 	DDRC &= ~INPUT_MASK;
@@ -145,7 +145,7 @@ void NameTagSM::stateMainMenu(byte event)
 				TRANSITION(stateTestsMenu);
 				break;
 			case 5:
-				//TRANSITION(stateHelpMenu);
+				TRANSITION(stateHelpMenu);
 				break;
 			case 6:
 				TRANSITION(stateDefault);
@@ -179,6 +179,7 @@ void NameTagSM::stateSettingsMenu(byte event){
 				TRANSITION(stateShiftSpeed);
 				break;
 			case 2:
+				next_menu_item = MENU_ITEM_PREV;
 				TRANSITION(stateMainMenu);
 				break;
 			}
@@ -195,15 +196,15 @@ void NameTagSM::stateSettingsMenu(byte event){
 
 void NameTagSM::stateShiftMode(byte event){
 
-	static const char* menuText[2][4] = {{"auto", "always", "Return"},
+	static const char* menuText[2][3] = {{"auto", "always", "Return"},
 	                                     {"auto", "immer", "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		initMenuItem(menuItem, display->shiftMode(), 4);
+		initMenuItem(menuItem, display->shiftMode(), 3);
 
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (advance(event, menuItem, 4)) {
+		if (advance(event, menuItem, 3)) {
 			switch (menuItem) {
 			case 0:
 				display->setShiftMode(NameTag::AUTO_SHIFT);
@@ -290,7 +291,7 @@ void NameTagSM::stateLanguageMenu(byte event){
 void NameTagSM::stateDisplayMenu(byte event){
 
 	static const char* menuText[2][4] = {{"Change Name", "Create Name", "Delete Name", "Return"},
-	                                     {"Name wechseln", "Name hinzufuegen", "Name löschen", "Zur""\x1f""ck"}};
+	                                     {"Name wechseln", "Name hinzuf""\x1f""gen", "Name löschen", "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
@@ -354,6 +355,7 @@ void NameTagSM::stateChangeName(byte event){
 		display->setText(name_text);
 	}
 }
+
 void NameTagSM::stateCreateName(byte event){
 
 }
@@ -452,6 +454,32 @@ void NameTagSM::stateResetSettings(byte event){
 
 }
 
-void NameTagSM::statehelpMenu(byte event){
+void NameTagSM::stateHelpMenu(byte event){
 
+	static const char* menuText[2][3] = {{"www.tekkietorium.de",
+	                                      "tekkietorim@gmx.de",
+	                                      "more info: www.tekkietorium.de/Projekte/LEDNamensschild",
+	                                     },
+	                                     {"www.tekkietorium.de",
+	                                      "tekkietorium@gmx.de",
+	                                      "mehr Infos: wwww.tekkietorium.de(Projekte/LEDNamensschild"
+	                                     }};
+	static char menuItem = 0;
+
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, 0, 3);
+
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (event & BTN_MENU){
+			TRANSITION(stateMainMenu);
+		}
+		advance(event, menuItem, 3);
+		return;
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+
+	// display new menu text
+	display->setText(menuText[language][menuItem]);
 }
