@@ -32,8 +32,8 @@ NameTagSM::NameTagSM(NameTag *display)
    , display(display), language(ENGLISH), next_menu_item(MENU_ITEM_DEFAULT)
 {
 	// setup input pins
-	DDRC &= ~INPUT_MASK;
-	PORTC |= INPUT_MASK;
+	DDRB &= ~INPUT_MASK;
+	PORTB |= INPUT_MASK;
 
 	selected_name = eeprom_read_byte(&EE_selected);
 	eeprom_read_block(name_text, EE_names[selected_name], MAX_TEXT_LEN);

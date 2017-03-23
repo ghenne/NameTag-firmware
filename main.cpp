@@ -15,9 +15,11 @@ int main(void)
 	init();
 
 	// input buttons: pins PC 1-3
-	DDRC &= ~INPUT_MASK;
-	PORTC |= INPUT_MASK;
-	PORTC |= _BV(6); // pullup reset?
+
+	DDRB &= ~INPUT_MASK;
+	PORTB |= INPUT_MASK;
+	PORTC |= _BV(6); // pullup reset
+
 
 	// handle input buttons as pin-change interrupts
 	PCMSK1 |= INPUT_MASK;
@@ -27,7 +29,7 @@ int main(void)
 	NameTagSM sm(&m);
 
 	while(1) {
-		sm.process(have_input | (~PINC & INPUT_MASK));
+		sm.process(have_input | (~PINB & INPUT_MASK));
 		have_input = 0;
 
 		m.show();

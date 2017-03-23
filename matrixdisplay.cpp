@@ -120,12 +120,10 @@ MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 	// allocate memory for (columnwise) display content
 	columns_ = static_cast<byte*>(malloc(cols_));
 
-	// declare selected pins of PortB as output
-	DDRB |= ((1 << clock_pin) | (1 << latch_pin));
+	// declare selected pins of Port C as OUTPUt
+	DDRC |= ((1 << clock_pin) | (1 << latch_pin));
 	// declare data pins on PortC as output
-	DDRC |= ((1 << 5) | (1 << 4));
-	// declare data pins on PortB as output
-	DDRB |= ((1 << 7) | (1 << 6));
+	DDRC |= ((1 << 2) | (1 << 3) | (1 << 4) | (1 << 5));
 	// set all eight pin of PortD as output
 	DDRD = 0xFF;
 
@@ -142,29 +140,18 @@ MatrixDisplay::~MatrixDisplay()
 void MatrixDisplay::show() const
 {
 	for(int row = 0; row < 8; ++row) {
-		bitClear(PORTB, latch_pin); // clear latch
+		bitClear(PORTC, latch_pin); // clear latch
 		for(byte *col = columns_, *end = columns_ + 8; col != end; ++col) {
-#if 1
-			byte PortBRegister =	PORTB & ~(1 << clock_pin);
-			bitWrite(PortBRegister, 7, bitRead(*(col+8),row));// set cols for third matrix
-			bitWrite(PortBRegister, 6, bitRead(*(col+0),row)); // set cols for fourth
-			PORTB = PortBRegister;
-			byte PortCRegister = PORTC;
-			bitWrite(PortCRegister, 4, bitRead(*(col+24),row));     // set cols for first matrix
-			bitWrite(PortCRegister, 5, bitRead(*(col+16),row)); // set cols for second matrix
+			byte PortCRegister =	PORTC & ~(1 << clock_pin); // clear clockpin
+			bitWrite(PortCRegister, 2, bitRead(*(col+24),row)); // set cols for first matrix
+			bitWrite(PortCRegister, 3, bitRead(*(col+16),row)); // set cols for second matrix
+			bitWrite(PortCRegister, 4, bitRead(*(col+8),row));  // set cols for third matrix
+			bitWrite(PortCRegister, 5, bitRead(*(col+0),row));  // set cols for fourth
 			PORTC = PortCRegister;
-
-#else
-			bitClear(PORTB,clock_pin);
-			bitWrite(PORTC, 4, bitRead(*(col+24),row));     // set cols for first matrix
-			bitWrite(PORTC, 5, bitRead(*(col+16),row)); // set cols for second matrix
-			bitWrite(PORTB, 7, bitRead(*(col+8),row));// set cols for third matrix
-			bitWrite(PORTB, 6, bitRead(*(col+0),row)); // set cols for fourth
-#endif
-			bitSet(PORTB, clock_pin);
+			bitSet(PORTC, clock_pin);
 		}
 		PORTD = 0xFF; // avoid glowing of prev/next row
-		bitSet(PORTB, latch_pin); // set latch
+		bitSet(PORTC, latch_pin); // set latch
 		// select row to be displayed
 		PORTD = ~(1 << row_order[row]);
 	}

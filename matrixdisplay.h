@@ -32,8 +32,8 @@ protected:
 	byte *columnPtr(byte column) const;
 
 private:
-	const byte clock_pin = 2; // SHCP / clock pin for shift register on PORTB 1
-	const byte latch_pin = 1; // STCP / latch pin for shift register on PORTB 2
+	const byte clock_pin = 0; // SHCP / clock pin for shift register on PORTC 0
+	const byte latch_pin = 1; // STCP / latch pin for shift register on PORTC 1
 
 	const byte cols_; // number of overall columns (8*num())
 	byte *columns_; // display content of all matrices

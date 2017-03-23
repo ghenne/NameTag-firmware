@@ -2,11 +2,11 @@
 
 #include "statemachine.h"
 #define ON_ENTRY bit(7)
-#define CHANGE   bit(0)
+#define CHANGE   bit(3)
 // these are the actual input pins (of PINC)
-#define BTN_DOWN bit(1)
-#define BTN_MENU bit(2)
-#define BTN_UP   bit(3)
+#define BTN_DOWN bit(0)
+#define BTN_MENU bit(1)
+#define BTN_UP   bit(2)
 // mask of all input pins
 #define INPUT_MASK (BTN_DOWN | BTN_UP | BTN_MENU)
 
