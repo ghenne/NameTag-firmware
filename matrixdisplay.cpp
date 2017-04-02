@@ -111,7 +111,7 @@ const byte LETTERS[] = {
 // PORT B (3 pins) is used to feed the shift registers
 
 // row / column re-ordering
-const byte col_order[] = {4,5,3,7,2,1,6,0};
+const byte col_order[] = {4,5,1,6,2,0,7,3};
 const byte row_order[] = {3,1,7,0,2,5,4,6};
 
 // constructor: initialize data structures
@@ -120,11 +120,11 @@ MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 	// allocate memory for (columnwise) display content
 	columns_ = static_cast<byte*>(malloc(cols_));
 
-	// declare selected pins of Port C as OUTPUt
-	DDRC |= ((1 << clock_pin) | (1 << latch_pin));
+	// declare selected pins of Port C as OUTPUT
+	DDRC |= _BV(clock_pin) | _BV(latch_pin);
 	// declare data pins on PortC as output
-	DDRC |= ((1 << 2) | (1 << 3) | (1 << 4) | (1 << 5));
-	// set all eight pin of PortD as output
+	DDRC |= _BV(2) |_BV(3) | _BV(4) | _BV(5);
+	// set all eight pins of PortD as output
 	DDRD = 0xFF;
 
 	clear();
@@ -142,18 +142,19 @@ void MatrixDisplay::show() const
 	for(int row = 0; row < 8; ++row) {
 		bitClear(PORTC, latch_pin); // clear latch
 		for(byte *col = columns_, *end = columns_ + 8; col != end; ++col) {
-			byte PortCRegister =	PORTC & ~(1 << clock_pin); // clear clockpin
-			bitWrite(PortCRegister, 2, bitRead(*(col+24),row)); // set cols for first matrix
-			bitWrite(PortCRegister, 3, bitRead(*(col+16),row)); // set cols for second matrix
-			bitWrite(PortCRegister, 4, bitRead(*(col+8),row));  // set cols for third matrix
-			bitWrite(PortCRegister, 5, bitRead(*(col+0),row));  // set cols for fourth
-			PORTC = PortCRegister;
+			byte portc = PORTC;
+			bitClear(portc, clock_pin);
+			bitWrite(portc, 2, bitRead(*(col+24),row)); // set cols for first matrix
+			bitWrite(portc, 3, bitRead(*(col+16),row)); // set cols for second matrix
+			bitWrite(portc, 4, bitRead(*(col+8),row));  // set cols for third matrix
+			bitWrite(portc, 5, bitRead(*(col+0),row));  // set cols for fourth
+			PORTC = portc;
 			bitSet(PORTC, clock_pin);
 		}
 		PORTD = 0xFF; // avoid glowing of prev/next row
 		bitSet(PORTC, latch_pin); // set latch
 		// select row to be displayed
-		PORTD = ~(1 << row_order[row]);
+		PORTD = ~_BV(row_order[row]);
 	}
 }
 

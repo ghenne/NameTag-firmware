@@ -15,7 +15,6 @@ int main(void)
 	init();
 
 	// input buttons: pins PC 1-3
-
 	DDRB &= ~INPUT_MASK;
 	PORTB |= INPUT_MASK;
 	PORTC |= _BV(6); // pullup reset
@@ -31,7 +30,6 @@ int main(void)
 	while(1) {
 		sm.process(have_input | (~PINB & INPUT_MASK));
 		have_input = 0;
-
 		m.show();
 	}
 }

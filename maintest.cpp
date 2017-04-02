@@ -1,50 +1,69 @@
 #include "avr.h"
 #include "nametag.h"
 
+#define CHANGE   bit(3)
+// these are the actual input pins (of PINC)
+#define BTN_DOWN bit(0)
+#define BTN_MENU bit(1)
+#define BTN_UP   bit(2)
+// mask of all input pins
+#define INPUT_MASK (BTN_DOWN | BTN_UP | BTN_MENU)
 
-#define INPUT_MASK (0b111 << 1)
-volatile char num = 1;
-volatile byte previous = 0;
-volatile bool changed = true;
+byte clock_pin = 1;
+byte latch_pin = 0;
 
 int main(void)
 {
 	init();
 
 	// input buttons: pins PC 1-3
-	DDRC &= ~INPUT_MASK;
-	PORTC |= INPUT_MASK;
+	DDRB &= ~INPUT_MASK;
+	PORTB |= INPUT_MASK;
+
+	DDRC &= ~_BV(6);
+	PORTC |= _BV(6); // pullup reset
+
 
 	// handle input buttons as pin-change interrupts
 	PCMSK1 |= INPUT_MASK;
-	PCICR |= 1 << PCIE1; // pin-change interrupt enable for PCI1
+	PCICR |= _BV(PCIE1); // pin-change interrupt enable for PCI1
 
-	NameTag m(1);
-	char buf[10];
+	NameTag m(4);
+
 	while(1) {
-		if (changed) {
-			m.setText(m.formatInt(buf, 10, num));
-			changed = false;
-		}
-		m.update();
-		m.show();
 	}
 }
 
+void shift(byte value)
+{
+	byte portc = PORTC;
+	bitWrite(portc, 2, value);
+	bitWrite(portc, 3, value);
+	bitWrite(portc, 4, value);
+	bitWrite(portc, 5, value);
+	PORTC = portc;
+	bitClear(PORTC, clock_pin);
+	bitSet(PORTC, clock_pin);
+}
+
+void latch()
+{
+	bitClear(PORTC, clock_pin);
+	bitSet(PORTC, latch_pin);
+	bitSet(PORTC, clock_pin);
+
+	bitClear(PORTC, clock_pin);
+	bitClear(PORTC, latch_pin);
+	bitSet(PORTC, clock_pin);
+}
+
 ISR(PCINT1_vect) {
-	changed = true;
 	delayMicroseconds(500);
 
-	byte value = ~PINC;
-	byte change = previous ^ value;
-	previous = value;
-
-	if (change & bit(1))
-		++num;
-	else if (change & bit(2))
-		num = 0;
-	else if (change & bit(3))
-		--num;
-	if (num > 9) num = 0;
-	if (num < 0) num = 9;
+	if (~PINB & BTN_DOWN)
+		shift(0);
+	else if (~PINB & BTN_UP)
+		shift(1);
+	else if (~PINB & BTN_MENU)
+		latch();
 }
