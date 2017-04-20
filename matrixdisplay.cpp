@@ -222,7 +222,7 @@ int MatrixDisplay::setString(const char *s, int column, char spacing) {
 	return column;
 }
 
-inline int MatrixDisplay::width(char ch)
+int MatrixDisplay::width(char ch)
 {
 	return *letterStart(ch);
 }
