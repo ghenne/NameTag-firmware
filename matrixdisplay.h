@@ -9,6 +9,9 @@ public:
 	inline byte num() const { return cols_ / 8; }
 	inline byte cols() const { return cols_; }
 
+	void setFlipped(bool flipped);
+	bool flipped() const { return flipped_; }
+
 	void show() const; // show current content
 
 	inline void clear() { clearColumns(0, cols_); }
@@ -37,4 +40,7 @@ private:
 
 	const byte cols_; // number of overall columns (8*num())
 	byte *columns_; // display content of all matrices
+
+	byte row_order_[8];
+	bool flipped_;
 };

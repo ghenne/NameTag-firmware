@@ -51,4 +51,5 @@ private:
 	void stateResetSettings(byte event);
 	void stateHelpMenu(byte event);
 	void stateDisplayTest(byte event);
+	void stateOrientationMenu(byte event);
 };

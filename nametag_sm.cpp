@@ -9,20 +9,21 @@
 	process(ON_ENTRY); \
 }
 
-byte EE_shift_speed EEMEM = 5;
-byte EE_shift_mode EEMEM = NameTag::AUTO_SHIFT;
-byte EE_language EEMEM = 0;
-byte EE_selected EEMEM = 0;
 char EE_names[8][MAX_TEXT_LEN] EEMEM = {
    "1: Felix",
    "2: Tekkietorium - Felix Haschke & Fabian Umhang",
    "3: Fabian",
    "4: Milan",
-   "5: ",
-   "6: ",
+   "5: Felix Haschke",
+   "6: Wir bieten auch für dich dieses Namensschild an",
    "7: ",
    "8: "
 };
+byte EE_shift_speed EEMEM = 5;
+byte EE_shift_mode EEMEM = NameTag::AUTO_SHIFT;
+byte EE_language EEMEM = 0;
+byte EE_selected EEMEM = 0;
+byte EE_orientation EEMEM = 1;
 
 #define MENU_ITEM_PREV    127
 #define MENU_ITEM_DEFAULT 126
@@ -35,13 +36,14 @@ NameTagSM::NameTagSM(NameTag *display)
 	DDRB &= ~INPUT_MASK;
 	PORTB |= INPUT_MASK;
 
-	selected_name = eeprom_read_byte(&EE_selected);
-	eeprom_read_block(name_text, EE_names[selected_name], MAX_TEXT_LEN);
-	display->setText(name_text + 3);
-
 	display->setShiftSpeed(eeprom_read_byte(&EE_shift_speed));
 	display->setShiftMode(static_cast<NameTag::ShiftMode>(eeprom_read_byte(&EE_shift_mode)));
 	language = static_cast<Language>(eeprom_read_byte(&EE_language));
+	display->setFlipped(eeprom_read_byte(&EE_orientation) == 1);
+
+	selected_name = eeprom_read_byte(&EE_selected);
+	eeprom_read_block(name_text, EE_names[selected_name], MAX_TEXT_LEN);
+	display->setText(name_text + 3);
 }
 
 bool NameTagSM::advance(byte event, char& item, const char num, const char min) {
@@ -162,15 +164,22 @@ void NameTagSM::stateMainMenu(byte event)
 
 void NameTagSM::stateSettingsMenu(byte event){
 
-	static const char* menuText[2][3] = {{"Shiftmode", "Shiftspeed", "Return"},
-	                                     {"Laufschrift modus", "Laufgeschwindigkeit", "Zur""\x1f""ck"}};
+	static const char* menuText[2][4] = {{"Shiftmode",
+	                                      "Shiftspeed",
+	                                      "Orientation",
+	                                      "Return"
+	                                     },
+	                                     {"Laufschriftmodus",
+	                                      "Laufgeschwindigkeit",
+	                                      "Ausrichtung",
+	                                      "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		initMenuItem(menuItem, 0, 3);
+		initMenuItem(menuItem, 0, 4);
 
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (advance(event, menuItem, 3)) {
+		if (advance(event, menuItem, 4)) {
 			switch (menuItem) {
 			case 0:
 				TRANSITION(stateShiftMode);
@@ -179,6 +188,9 @@ void NameTagSM::stateSettingsMenu(byte event){
 				TRANSITION(stateShiftSpeed);
 				break;
 			case 2:
+				TRANSITION(stateOrientationMenu);
+				break;
+			case 3:
 				next_menu_item = MENU_ITEM_PREV;
 				TRANSITION(stateMainMenu);
 				break;
@@ -567,6 +579,41 @@ void NameTagSM::stateHelpMenu(byte event){
 		}
 		advance(event, menuItem, 3);
 		return;
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+
+	// display new menu text
+	display->setText(menuText[language][menuItem]);
+}
+void NameTagSM::stateOrientationMenu(byte event){
+
+	static const char* menuText[2][3] = {{"bottom",
+	                                      "top",
+	                                      "return"
+	                                     },
+	                                     {"unten",
+	                                      "oben",
+	                                      "Zur""\x1f""ck"}};
+	static char menuItem = 0;
+
+	if (event == ON_ENTRY)
+		initMenuItem(menuItem, display->flipped(), 3);
+
+	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
+		if (advance(event, menuItem, 3)) {
+			switch (menuItem) {
+			case 0:
+			case 1:
+				eeprom_update_byte(&EE_orientation, menuItem);
+				display->setFlipped(menuItem == 1);
+				// do not break here
+			case 2:
+				TRANSITION(stateSettingsMenu);
+			}
+			return;
+		}
 	} else { // no change
 		display->update();
 		return; // do not call setText()

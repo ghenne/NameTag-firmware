@@ -119,6 +119,7 @@ MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
 {
 	// allocate memory for (columnwise) display content
 	columns_ = static_cast<byte*>(malloc(cols_));
+	setFlipped(false);
 
 	// declare selected pins of Port C as OUTPUT
 	DDRC |= _BV(clock_pin) | _BV(latch_pin);
@@ -154,7 +155,7 @@ void MatrixDisplay::show() const
 		PORTD = 0xFF; // avoid glowing of prev/next row
 		bitSet(PORTC, latch_pin); // set latch
 		// select row to be displayed
-		PORTD = ~_BV(row_order[row]);
+		PORTD = ~_BV(row_order_[row]);
 	}
 }
 
@@ -162,8 +163,10 @@ void MatrixDisplay::show() const
 byte* MatrixDisplay::columnPtr(byte column) const
 {
 	static const byte mask = 0b111; // bit mask for last 3 bits
+	// reshuffle matrices?
+	byte column_flipped = flipped_ ? cols_-1 - column : column;
 	// reshuffle last 3 bits to match hardware wiring order
-	column = (column & ~mask) | col_order[column & mask];
+	column = (column_flipped & ~mask) | col_order[column_flipped & mask];
 	return columns_ + column;
 }
 
@@ -259,4 +262,15 @@ char* MatrixDisplay::formatInt(char* digits, byte size, int value)
 	else ++size;
 
 	return digits + size;
+}
+void MatrixDisplay::setFlipped(bool flipped){
+	flipped_ = flipped;
+	if (flipped) {
+		for (int i = 0; i < 8; ++i)
+			row_order_[i] = ::row_order[7-i];
+	} else {
+		for (int i = 0; i < 8; ++i)
+			row_order_[i] = ::row_order[i];
+	}
+	return;
 }
