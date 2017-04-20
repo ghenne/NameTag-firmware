@@ -14,15 +14,15 @@ int main(void)
 {
 	init();
 
-	// input buttons: pins PC 1-3
+	// input buttons: pins PB 0-2
 	DDRB &= ~INPUT_MASK;
 	PORTB |= INPUT_MASK;
 	PORTC |= _BV(6); // pullup reset
 
 
 	// handle input buttons as pin-change interrupts
-	PCMSK1 |= INPUT_MASK;
-	PCICR |= _BV(PCIE1); // pin-change interrupt enable for PCI1
+	PCMSK0 |= INPUT_MASK;
+	PCICR |= _BV(PCIE0); // pin-change interrupt enable for PCI1
 
 	NameTag m(4);
 	NameTagSM sm(&m);
@@ -34,7 +34,7 @@ int main(void)
 	}
 }
 
-ISR(PCINT1_vect) {
+ISR(PCINT0_vect) {
 	delayMicroseconds(500);
 	have_input = CHANGE;
 }
