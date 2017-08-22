@@ -113,8 +113,10 @@ const byte LETTERS[] = {
 // PORT B (3 pins) is used to feed the shift registers
 
 // row / column re-ordering
-const byte col_order[] = {4,5,1,6,2,0,7,3};
-const byte row_order[] = {3,1,7,0,2,5,4,6};
+//const byte col_order[] = {4,5,1,6,2,0,7,3}; //version 1.3
+//const byte row_order[] = {3,1,7,0,2,5,4,6}; //version 1.3
+const byte col_order[] = {4,5,1,6,3,0,7,2};   //version 1.4
+const byte row_order[] = {3,1,2,0,4,5,6,7};   //version 1.4
 
 // constructor: initialize data structures
 MatrixDisplay::MatrixDisplay(byte num) : cols_(8*num)
