@@ -1,8 +1,8 @@
 #include "nametag.h"
 
 NameTag::NameTag(byte num)
-   : MatrixDisplay(num)
-   , start_col_(0), shift_mode_(AUTO_SHIFT), shift_count_(0)
+    : MatrixDisplay(num)
+    , start_col_(0), shift_mode_(AUTO_SHIFT), shift_count_(0), curser_pos_(-1)
 {
 	setShiftSpeed(5);
 }
@@ -21,7 +21,7 @@ void NameTag::update() {
 void NameTag::shift()
 {
 	--start_col_;
-	if (setString(first_, start_col_) <= 0) {
+	if (setString(first_, start_col_, curser_pos_ + text_-first_) <= 0) {
 		first_ = text_;
 		start_col_ = 7;
 	} else { // should we advance to next start char?
@@ -55,7 +55,7 @@ void NameTag::setShiftMode(NameTag::ShiftMode mode)
 	if (shift_mode_ & SHIFT) // when shifting, start in column 7
 		start_col_ = 7;
 	else // otherwise, start in first column + setString once
-		setString(text_, start_col_ = 0);
+		setString(text_, start_col_ = 0, curser_pos_);
 }
 
 void NameTag::setShiftSpeed(byte speed) {
@@ -66,4 +66,9 @@ byte NameTag::shiftMode(){
 	if(shift_mode_ & AUTO_SHIFT)
 		return 2;
 	return shift_mode_;
+}
+
+void NameTag::setCursor(char pos)
+{
+	curser_pos_ = pos;
 }

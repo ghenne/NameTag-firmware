@@ -212,9 +212,16 @@ byte MatrixDisplay::setChar(char ch, int column)
 }
 
 // write a string, starting at column
-int MatrixDisplay::setString(const char *s, int column, char spacing) {
+int MatrixDisplay::setString(const char *s, int column, char cursor_pos, char spacing) {
+	int char_pos = 0;
 	while (*s != 0 && column < cols_) {
-		column += setChar(*s, column);
+		byte char_width = setChar(*s, column);
+		if (char_pos++ == cursor_pos){
+			for (byte col = column, end = col + char_width; col != end; ++col){
+				setPixel(7, col, 1);
+			}
+		}
+		column += char_width;
 		clearColumns(column, column+spacing);
 		column += spacing;
 		++s;

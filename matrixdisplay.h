@@ -22,7 +22,7 @@ public:
 	// set matrix display to write character at column
 	byte setChar(char ch, int column);
 	// set matrix display to write string at column
-	int setString(const char *s, int column=0, char spacing=1);
+	int setString(const char *s, int column=0, char cursor_pos=-1, char spacing=1);
 	// compute width (in columns) of a single char
 	static int width(char ch);
 	// compute width (in columns) of text

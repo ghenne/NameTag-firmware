@@ -21,6 +21,9 @@ public:
 	byte shiftSpeed() const { return shift_speed_ >> 3; }
 	byte shiftMode();
 
+	void setCursor(char pos);
+	char getCursor() const { return curser_pos_; }
+
 private:
 	const char* text_;  // displayed text
 	const char* first_; // first visible character
@@ -28,4 +31,5 @@ private:
 	byte shift_mode_;
 	byte shift_count_;
 	byte shift_speed_;
+	char curser_pos_;
 };

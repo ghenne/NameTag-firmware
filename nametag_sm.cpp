@@ -241,17 +241,18 @@ void NameTagSM::stateShiftMode(byte event){
 }
 
 void NameTagSM::stateShiftSpeed(byte event) {
-	const char MAX_SPEED = 20;
+	const char MAX_SPEED = 21;
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		initMenuItem(menuItem, display->shiftSpeed(), MAX_SPEED);
+		menuItem = 21-display->shiftSpeed();
 
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
 		if (advance(event, menuItem, MAX_SPEED)) {
 			if (menuItem != 0) {
-				display->setShiftSpeed(menuItem);
-				eeprom_update_byte(&EE_shift_speed, menuItem);
+				byte value = 21-menuItem;
+				display->setShiftSpeed(value);
+				eeprom_update_byte(&EE_shift_speed, value);
 			}
 			TRANSITION(stateSettingsMenu);
 			return;
