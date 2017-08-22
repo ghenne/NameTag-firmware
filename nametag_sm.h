@@ -23,7 +23,8 @@ class NameTagSM : public StateMachine
 	unsigned long time;
 	char name_text[MAX_TEXT_LEN];
 	char num_buffer[10];
-	int selected_name;
+	byte selected_name, edited_name;
+	byte edit_first_visible;
 	char next_menu_item;
 
 public:
@@ -35,6 +36,7 @@ private:
 	bool advance(byte event, char &item, const char max, const char min=0);
 	/// initialize menu item to next_menu_item or _default
 	void initMenuItem(char &item, const char _default, const char num);
+	void adjustFirstVisible(byte &first, char cursor);
 
 	void stateDefault(byte event);
 	void stateEnterMenu(byte event);
@@ -44,7 +46,10 @@ private:
 	void stateShiftMode(byte event);
 	void stateShiftSpeed(byte event);
 	void stateDisplayMenu(byte event);
-	void stateChangeName(byte event);
+	void stateButtonTest(byte event);
+	void stateEditOptionsMenu(byte event);
+	void stateEditSelectChar(byte event);
+	void stateEditChar(byte event);
 	void stateCreateName(byte event);
 	void stateDeleteName(byte event);
 	void stateTestsMenu(byte event);

@@ -2,6 +2,7 @@
 #include "nametag.h"
 
 #include "avr/eeprom.h"
+#include "names.h"
 
 #undef TRANSITION
 #define TRANSITION(s) {\
@@ -10,14 +11,14 @@
 }
 
 char EE_names[8][MAX_TEXT_LEN] EEMEM = {
-   "1: Felix",
-   "2: Tekkietorium - Felix Haschke & Fabian Umhang",
-   "3: Fabian",
-   "4: Milan",
-   "5: Felix Haschke",
-   "6: Wir bieten auch für dich dieses Namensschild an",
-   "7: ",
-   "8: "
+   "1: " NAME1,
+   "2: " NAME2,
+   "3: " NAME3,
+   "4: " NAME4,
+   "5: " NAME5,
+   "6: " NAME6,
+   "7: " NAME7,
+   "8: " NAME8
 };
 byte EE_shift_speed EEMEM = 5;
 byte EE_shift_mode EEMEM = NameTag::AUTO_SHIFT;
@@ -108,16 +109,16 @@ void NameTagSM::stateEnterMenu(byte event) // option state enter menu
 
 void NameTagSM::stateMainMenu(byte event)
 {
-	static const char* menuText[2][7] = {{"Language",
-	                                      "Display",
-	                                      "Settings",
-	                                      "Reset to Factory Settings",
-	                                      "Tests",
-	                                      "help & system Information",
-	                                      "Return"
+	static const char* menuText[2][7] = {{"language",
+	                                      "name",
+	                                      "settings",
+	                                      "reset to factory settings",
+	                                      "tests",
+	                                      "help & system information",
+	                                      "return"
 	                                     },
 	                                     {"Sprache",
-	                                      "Anzeige",
+	                                      "Name",
 	                                      "Einstellungen",
 	                                      "Zur""\x1f""cksetzen auf Werkseinstellungen",
 	                                      "Tests",
@@ -164,10 +165,10 @@ void NameTagSM::stateMainMenu(byte event)
 
 void NameTagSM::stateSettingsMenu(byte event){
 
-	static const char* menuText[2][4] = {{"Shiftmode",
-	                                      "Shiftspeed",
-	                                      "Orientation",
-	                                      "Return"
+	static const char* menuText[2][4] = {{"shiftmode",
+	                                      "shiftspeed",
+	                                      "orientation",
+	                                      "return"
 	                                     },
 	                                     {"Laufschriftmodus",
 	                                      "Laufgeschwindigkeit",
@@ -208,7 +209,7 @@ void NameTagSM::stateSettingsMenu(byte event){
 
 void NameTagSM::stateShiftMode(byte event){
 
-	static const char* menuText[2][3] = {{"auto", "always", "Return"},
+	static const char* menuText[2][3] = {{"auto", "always", "return"},
 	                                     {"auto", "immer", "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
@@ -267,7 +268,7 @@ void NameTagSM::stateShiftSpeed(byte event) {
 	}
 
 	if (menuItem == 0) {
-		display->setText(language == ENGLISH ? "Return" : "Zur""\x1f""ck");
+		display->setText(language == ENGLISH ? "return" : "Zur""\x1f""ck");
 	} else {
 		display->setText(display->formatInt(num_buffer, 10, menuItem));
 	}
@@ -275,7 +276,7 @@ void NameTagSM::stateShiftSpeed(byte event) {
 
 void NameTagSM::stateLanguageMenu(byte event){
 
-	static const char* menuText[2][3] = {{"English", "German", "Return"},
+	static const char* menuText[2][3] = {{"English", "German", "return"},
 	                                     {"English", "Deutsch", "Zur""\x1f""ck"}};
 
 	static char menuItem = 0;
@@ -301,57 +302,23 @@ void NameTagSM::stateLanguageMenu(byte event){
 	display->setText(menuText[language][menuItem]);
 }
 
+// select name for editing / display
 void NameTagSM::stateDisplayMenu(byte event){
-
-	static const char* menuText[2][4] = {{"Change Name", "Create Name", "Delete Name", "Return"},
-	                                     {"Name wechseln", "Name hinzuf""\x1f""gen", "Name löschen", "Zur""\x1f""ck"}};
+	static const char* menuText[2] = {"return", "Zur""\x1f""ck"};
 	static char menuItem = 0;
 
-	if (event == ON_ENTRY)
-		initMenuItem(menuItem, 0, 4);
-
-	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (advance(event, menuItem, 4)) {
-			switch (menuItem) {
-			case 0:
-				TRANSITION(stateChangeName);
-				break;
-			case 1:
-				//TRANSITION(stateCreateName);
-				break;
-			case 2:
-				//TRANSITION(stateDeleteName);
-				break;
-			case 3:
-				TRANSITION(stateMainMenu);
-				break;
-			}
-			return;
-		}
-	} else { // no change
-		display->update();
-		return; // do not call setText()
+	if (event == ON_ENTRY) {
+		edited_name = selected_name;
+		initMenuItem(menuItem, edited_name, 9);
 	}
-
-	// display new menu text
-	display->setText(menuText[language][menuItem]);
-}
-
-void NameTagSM::stateChangeName(byte event){
-	static const char* menuText[2] = {"Return", "Zur""\x1f""ck"};
-	static char menuItem = 0;
-
-	if (event == ON_ENTRY)
-		initMenuItem(menuItem, selected_name, 9);
-
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
 		if (advance(event, menuItem, 9)) {
 			if(menuItem != 8) {
-				selected_name = menuItem;
-				display->setText(name_text + 3);
-				eeprom_update_byte(&EE_selected, menuItem);
+				edited_name = menuItem;
+				TRANSITION(stateEditOptionsMenu);
 			}
-			TRANSITION(stateDisplayMenu);
+			else
+				TRANSITION(stateMainMenu);
 			return;
 		}
 	} else { // no change
@@ -368,115 +335,216 @@ void NameTagSM::stateChangeName(byte event){
 		display->setText(name_text);
 	}
 }
-
-void NameTagSM::stateCreateName(byte event){
-
-	static const char* menuText[2][7] =
-	{{
-	    "Special character",
-	    "numbers",
-	    "capital Letters",
-	    "small Letters",
-	    "edit previous letter",
-	    "save name",
-	    "Return"
-	 },
-	 {
-	    "Sonderzeichen",
-	    "Zahlen",
-	    "Großbuchstaben",
-	    "Kleinbuchstaben",
-	    "vorheringen Buchstabe bearbeiten",
-	    "Name Speichern",
-	    "Zur""\x1f""ck"
-	 }};
-	/*
+void NameTagSM::stateEditOptionsMenu(byte event){
+	static const char* menuText[2][4] = {{"select name", "edit name", "delete Name", "return"},
+	                                     {"Name ausw""\x1d""hlen", "Name bearbeiten", "Name l""\x1e""schen", "Zur""\x1f""ck"}};
 	static char menuItem = 0;
-	static bool capitalization = 0;
-	static const char* Name;
 
 	if (event == ON_ENTRY)
-		initMenuItem(menuItem, 0, 31);
+		initMenuItem(menuItem, 1, 4);
 
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (advance(event, menuItem, 3)) {
-			if(menuItem >= 0 && menuItem < 26){
-				//*Name = menuItem;
-				//++Name;
-			}
-			else {
-				switch (menuItem) {
-				case 26:
-					//TRANSITION(stateCreateSpecialCharacterMenu);
-					break;
-				case 27:
-					//TRANSITION(stateCreateNumberMenu);
-					break;
-				case 28:
-					if(capitalization == false)
-						capitalization = true;
-					else
-						capitalization = false;
-					break;
-				case 29:
-					--Name;
-					break;
-				case 30:
-					display->setText(Name);
-					return;
-				case 31:
-					next_menu_item = MENU_ITEM_PREV;
-					TRANSITION(stateMainMenu);
-					break;
-				}
+		if (advance(event, menuItem, 4)) {
+			switch (menuItem) {
+			case 0:
+				selected_name = edited_name;
+				eeprom_update_byte(&EE_selected, selected_name);
+				++menuItem; // switch to next menu item
+				break;
+			case 1:
+				display->setCursor(0);
+				TRANSITION(stateEditSelectChar);
+				return;
+			case 2:
+				name_text[3] = '\0';
+				eeprom_update_block(name_text, EE_names[edited_name], MAX_TEXT_LEN);
+				--menuItem; // switch to previous menu item
+				break;
+			case 3:
+				menuItem = 0;
+				TRANSITION(stateDisplayMenu);
 				return;
 			}
 		}
 	} else { // no change
 		display->update();
-		return; // do not call setText()
+		return;
 	}
-
 	// display new menu text
-	if(menuItem >= 0 && menuItem < 26){
-		display->setChar(menuItem,5);
-	}
-	else switch (menuItem) {
-	case 26:
-		display->setText(menuText[language][0]);
-		break;
-	case 27:
-		display->setText(menuText[language][1]);
-		break;
-	case 28:
-		if (capitalization == false)
-			display->setText(menuText[language][2]);
-		else
-			display->setText(menuText[language][3]);
-		break;
-	case 29:
-	case 30:
-	case 31:
-		display->setText(menuText[language][menuItem-25]);
-		break;
-	default:
-		break;
-	}
-*/
+	display->setText(menuText[language][menuItem]);
 }
 
-void NameTagSM::stateDeleteName(byte event){
+void NameTagSM::adjustFirstVisible(byte &first, char cursor)
+{
+	if (cursor <= first)
+		first = cursor;
+	else {
+		int column = 0;
+		byte pos = first;
+		// find column after cursor
+		for (char *pc = name_text + first; *pc; ++pc, ++pos) {
+			column += display->width(*pc) + 1;
+			if (pos == cursor)
+				break;
+		}
+		// shift chars until cursor becomes visible
+		char *pc = name_text + first;
+		while (column >= display->cols()) {
+			column -= display->width(*pc) + 1;
+			++pc; ++first;
+		}
+	}
+}
 
+// select char for editing
+void NameTagSM::stateEditSelectChar(byte event) {
+	static byte button_state; // remember previous button state
+
+	byte old_button_state = button_state;
+	button_state = event & INPUT_MASK;
+
+	if (event == ON_ENTRY) {
+		old_button_state = button_state = (~PINB & INPUT_MASK);
+		edit_first_visible = 3;
+		adjustFirstVisible(edit_first_visible, display->getCursor()+3);
+		time = 0;
+	}
+	byte changes = old_button_state ^ button_state;
+
+	if (button_state < old_button_state) {
+		// any button released
+		if (changes & BTN_MENU && time != 0) {
+			// menu button released (after first press within this state, i.e. time != 0)
+			TRANSITION(stateEditChar);
+			return;
+		}
+		time = 0; // reset time
+	} else if (changes & BTN_MENU && button_state & BTN_MENU) {
+		// menu button pressed
+		time = millis() + 500;
+	} else if (button_state & BTN_MENU) {
+		// menu button still pressed
+		if (time != 0 && millis() > time) {
+			// save current name
+			eeprom_update_block(name_text, EE_names[edited_name], MAX_TEXT_LEN);
+			display->setCursor(-1);
+			TRANSITION(stateEditOptionsMenu);
+			return;
+		}
+	}
+
+	// if up/down pressed, advance char
+	if (button_state & (BTN_DOWN | BTN_UP) &&
+	        (time == 0 || millis() > time)) {
+		// remember last update time
+		time = millis() + (time == 0 ? 500 : 100);
+
+		char cursor = display->getCursor();
+		int len = strlen(name_text+3);
+		// allow cursor to be after text (to extend)
+		advance(button_state, cursor, len + (len < MAX_NAME_LEN ? 1 : 0), 0);
+		if (cursor+2 >= len) {
+			char *pc = name_text+3+len; // pointer to last char (\0) of name_text
+			if (cursor == len)
+				*pc++ = ' '; // extend by one space;
+			else if (cursor == len-2 && pc[-1] == ' ')
+				--pc; // shorten text
+			*pc = '\0'; // define new end of string
+		}
+		display->setCursor(cursor);
+
+		// adjust edit_first_visible, such that cursor becomes visible
+		adjustFirstVisible(edit_first_visible, cursor+3);
+	}
+
+	int last = display->setString(name_text + edit_first_visible, 0,
+	                              display->getCursor() + 3 - edit_first_visible, 1);
+	display->clearColumns(last, display->cols());
+}
+
+void NameTagSM::stateEditChar(byte event){
+	static char sel_char = 0;
+
+	if (event == ON_ENTRY) {
+		time = 0;
+		//sel_char = name_text[3+display->getCursor()] - ' ';
+	}
+
+	else if (event & CHANGE && event & BTN_MENU) {
+		// char accepted
+		TRANSITION(stateEditSelectChar);
+		return;
+	}
+
+	unsigned long now = millis();
+	byte dir = event & (BTN_DOWN | BTN_UP);
+	if (!dir)
+		time = 0; // reset time when both buttons released
+
+	// if dir button first pressed (time==0) or still pressed
+	if (dir && (time == 0 || now > time)) {
+		// remember last update time
+		time = now + (time == 0 ? 500 : 100);
+		advance(event, sel_char, 100/*127-32*/, 0);
+		//name_text[3+display->getCursor()] = ' ' + sel_char;
+		if(sel_char == 0)										// Letter	A
+			name_text[3+display->getCursor()] = 'A';
+		else if(sel_char == 1)									// Letters	Ä
+			name_text[3+display->getCursor()] = '\x1b';
+		else if(sel_char >= 2 && sel_char <= 15)				// Letters	B-O
+			name_text[3+display->getCursor()] = 'B' + sel_char  - 2;
+		else if(sel_char == 16)							// Letters	Ö
+			name_text[3+display->getCursor()] = '\x1c';
+		else if(sel_char >= 17 && sel_char <= 22)				// Letters	P-U
+			name_text[3+display->getCursor()] = 'P' + sel_char - 17;
+		else if(sel_char == 23 || sel_char == 52)				// Letters	Ü & ü
+			name_text[3+display->getCursor()] = '\x1f';
+		else if(sel_char >= 24 && sel_char <= 28)				// Letters	V-Z
+			name_text[3+display->getCursor()] = 'V' + sel_char - 24;
+		else if(sel_char == 29)									// Letter	a
+			name_text[3+display->getCursor()] = 'a';
+		else if(sel_char == 30)									// Letter	a
+			name_text[3+display->getCursor()] = '\x1d';
+		else if(sel_char >= 31 && sel_char <= 44)				// Letter	b-o
+			name_text[3+display->getCursor()] = 'b' + sel_char - 31;
+		else if(sel_char == 45)									// Letter	ö
+			name_text[3+display->getCursor()] = '\x1e';
+		else if(sel_char >= 46 && sel_char <= 51)				// Letter	p-u
+			name_text[3+display->getCursor()] = 'p' + sel_char - 46;
+		else if(sel_char >= 51 && sel_char <= 57)				// Letter	v-z
+			name_text[3+display->getCursor()] = 'v' + sel_char - 51;
+		else if(sel_char == 58)									// Space
+			name_text[3+display->getCursor()] = ' ';
+		else if(sel_char >= 59 && sel_char <= 69)				// Nubers	0-9
+			name_text[3+display->getCursor()] = '0' + sel_char - 59;
+		else if(sel_char >= 70 && sel_char <= 85)				// characters	!,",#,$,%,&,',(,),*,+,,,-,-,\;
+			name_text[3+display->getCursor()] = '!' + sel_char - 70;
+		else if(sel_char >= 86 && sel_char <= 93)				// characters	:,;,<,=,>,?,@
+			name_text[3+display->getCursor()] = ':' + sel_char - 86;
+		else if(sel_char >= 93 && sel_char <= 96)				// characters	[, \, ]
+			name_text[3+display->getCursor()] = '[' + sel_char - 93;
+		else if(sel_char >= 96 && sel_char <= 100)				// characters	{, |, }, ~
+			name_text[3+display->getCursor()] = '{' + sel_char - 96;
+
+		else {
+			name_text[3+display->getCursor()] = '?';
+		}
+	}
+
+	char cursor = display->getCursor() + 3 - edit_first_visible;
+	if (time != 0 || now % 1000 > 500)
+		cursor = -1;
+	int last = display->setString(name_text + edit_first_visible, 0, cursor, 1);
+	display->clearColumns(last, display->cols());
 }
 
 void NameTagSM::stateTestsMenu(byte event){
-
-	static const char* menuText[2][3] = {{"Test the Display",
-	                                      "Test the Buttons",
-	                                      "Return"
+	static const char* menuText[2][3] = {{"display test",
+	                                      "button test",
+	                                      "return"
 	                                     },
-	                                     {"Test des Displays",
-	                                      "Test der Taster",
+	                                     {"Displaytest",
+	                                      "Tastertest",
 	                                      "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
@@ -490,7 +558,7 @@ void NameTagSM::stateTestsMenu(byte event){
 				TRANSITION(stateDisplayTest);
 				break;
 			case 1:
-				//TRANSITION(stateButtonTest);
+				TRANSITION(stateButtonTest);
 				break;
 			case 2:
 				next_menu_item = true;
@@ -509,21 +577,49 @@ void NameTagSM::stateTestsMenu(byte event){
 }
 
 void NameTagSM::stateDisplayTest(byte event){
+	static byte menu_item = 0;
 	if (event == ON_ENTRY) {
-		display->setText("\x29""\x30""\x31""0123456789");
+		menu_item = 0;
+		display->setText("");
+		display->clear();
+		for(int i = 0; i < 32; i++){
+			display->setColumn(i, 255);
+		}
 	} else if (event & CHANGE && event & INPUT_MASK) { // only react to input changes
-		TRANSITION(stateTestsMenu);
-		return;
+		++menu_item;
+		if(menu_item == 1)
+			display->setText("\x29""\x30""\x31""0123456789");
+		else {
+			TRANSITION(stateTestsMenu);
+			return;
+		}
 	} else { // no change
 		display->update();
 		return; // do not call setText()
 	}
 }
 
-void NameTagSM::stateResetSettings(byte event){
+void NameTagSM::stateButtonTest(byte event){
+	if (event == ON_ENTRY) {
+		display->setText("");
+		display->clear();
+	} else if (event & CHANGE) { // only react to input changes
+		for(int i = 24; i < 32; i++)
+			display->setColumn(i, (event & BTN_UP ? 255 : 0));
+		for(int i = 16; i < 24; i++)
+			display->setColumn(i, (event & BTN_MENU ? 255 : 0));
+		for(int i = 8; i < 16; i++)
+			display->setColumn(i, (event & BTN_DOWN ? 255 : 0));
+	} else { // no change
+		display->update();
+		return; // do not call setText()
+	}
+}
 
+
+void NameTagSM::stateResetSettings(byte event){
 	static const char* menuText[2][2] = {{"reset to factory settings ?",
-	                                      "Return"},
+	                                      "return"},
 	                                     {"Zur""\x1f""cksetzen auf Werkeinstellungen ?",
 	                                      "Zur""\x1f""ck"}};
 	static char menuItem = 0;
@@ -541,6 +637,14 @@ void NameTagSM::stateResetSettings(byte event){
 				eeprom_update_byte(&EE_shift_mode, display->shiftMode());
 				display->setShiftSpeed(5);
 				eeprom_update_byte(&EE_shift_speed, display->shiftSpeed());
+				eeprom_update_block(NAME1, EE_names[0]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME2, EE_names[1]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME3, EE_names[2]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME4, EE_names[3]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME5, EE_names[4]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME6, EE_names[5]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME7, EE_names[6]+3, MAX_NAME_LEN);
+				eeprom_update_block(NAME8, EE_names[7]+3, MAX_NAME_LEN);
 				TRANSITION(stateMainMenu);
 				break;
 			case 1:
@@ -560,36 +664,34 @@ void NameTagSM::stateResetSettings(byte event){
 }
 
 void NameTagSM::stateHelpMenu(byte event){
-
-	static const char* menuText[2][3] = {{"www.tekkietorium.de",
+	 static const char* menuText[2][3] = {{"www.tekkietorium.de",
 	                                      "tekkietorim@gmx.de",
-	                                      "more info: www.tekkietorium.de/Projekte/LEDNamensschild",
+	                                       "return"
 	                                     },
 	                                     {"www.tekkietorium.de",
 	                                      "tekkietorium@gmx.de",
-	                                      "mehr Infos: wwww.tekkietorium.de(Projekte/LEDNamensschild"
+	                                       "Zur""\x1f""ck"
 	                                     }};
 	static char menuItem = 0;
 
-	if (event == ON_ENTRY)
+	 if (event == ON_ENTRY)
 		initMenuItem(menuItem, 0, 3);
 
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (event & BTN_MENU){
+		  if (advance(event, menuItem, 3)) {
 			TRANSITION(stateMainMenu);
+			   return;
 		}
-		advance(event, menuItem, 3);
-		return;
 	} else { // no change
 		display->update();
 		return; // do not call setText()
 	}
 
 	// display new menu text
-	display->setText(menuText[language][menuItem]);
+	 display->setText(menuText[language][menuItem]);
 }
-void NameTagSM::stateOrientationMenu(byte event){
 
+void NameTagSM::stateOrientationMenu(byte event){
 	static const char* menuText[2][3] = {{"bottom",
 	                                      "top",
 	                                      "return"
