@@ -4,9 +4,11 @@
 // This tables stores the bit patterns required to display all ASCII
 // characters. Each letter is represented by up to 5 columns.
 // First column specifies number of columns actually required.
-#define FIRST_LETTER (' ' - 3)
+#define FIRST_LETTER (' ' - 5)
 #define LAST_LETTER '~'
 const byte LETTERS[] = {
+   4, 0b01111101, 0b00010010, 0b00010010, 0b01111101, 0b00000000, // Ä = 27
+   4, 0b00111101, 0b01000010, 0b01000010, 0b00111101, 0b00000000, // Ö = 28
    4, 0b00100000, 0b01010101, 0b01010101, 0b01111000, 0b00000000, // ä = 29
    4, 0b00111000, 0b01000101, 0b01000101, 0b00111000, 0b00000000, // ö = 30
    4, 0b00111100, 0b01000001, 0b01000001, 0b01111100, 0b00000000, // ü = 31
