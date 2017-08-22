@@ -6,7 +6,6 @@ add_avr_library(${PROJECT_NAME}
    nametag.cpp
    statemachine.h
    timing.c
-   avr.h
 )
 
 if(1)
