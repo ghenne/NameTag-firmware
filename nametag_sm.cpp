@@ -109,48 +109,42 @@ void NameTagSM::stateEnterMenu(byte event) // option state enter menu
 
 void NameTagSM::stateMainMenu(byte event)
 {
-	static const char* menuText[2][7] = {{"language",
-	                                      "name",
+	static const char* menuText[2][6] = {{ "name",
 	                                      "settings",
-	                                      "reset to factory settings",
+	                                      "reset",
 	                                      "tests",
-	                                      "help & system information",
+	                                      "information",
 	                                      "return"
 	                                     },
-	                                     {"Sprache",
-	                                      "Name",
+	                                     {"Name",
 	                                      "Einstellungen",
-	                                      "Zur""\x1f""cksetzen auf Werkseinstellungen",
+	                                      "Zur""\x1f""cksetzen",
 	                                      "Tests",
-	                                      "Hilfe und System Informationen",
+	                                      "Informationen",
 	                                      "Zur""\x1f""ck"
 	                                     }};
 	static char menuItem = 0;
-
 	if (event == ON_ENTRY)
-		initMenuItem(menuItem, 1, 7);
+		initMenuItem(menuItem, 1, 6);
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (advance(event, menuItem, 7)) {
+		if (advance(event, menuItem, 6)) {
 			switch (menuItem) {
 			case 0:
-				TRANSITION(stateLanguageMenu);
-				break;
-			case 1:
 				TRANSITION(stateDisplayMenu);
 				break;
-			case 2:
+			case 1:
 				TRANSITION(stateSettingsMenu);
 				break;
-			case 3:
+			case 2:
 				TRANSITION(stateResetSettings);
 				break;
-			case 4:
+			case 3:
 				TRANSITION(stateTestsMenu);
 				break;
-			case 5:
+			case 4:
 				TRANSITION(stateHelpMenu);
 				break;
-			case 6:
+			case 5:
 				TRANSITION(stateDefault);
 				break;
 			}
@@ -165,33 +159,38 @@ void NameTagSM::stateMainMenu(byte event)
 
 void NameTagSM::stateSettingsMenu(byte event){
 
-	static const char* menuText[2][4] = {{"shiftmode",
+	static const char* menuText[2][5] = {{"language",
+	                                      "shiftmode",
 	                                      "shiftspeed",
 	                                      "orientation",
 	                                      "return"
 	                                     },
-	                                     {"Laufschriftmodus",
+	                                     {"Sprache",
+	                                      "Laufschriftmodus",
 	                                      "Laufgeschwindigkeit",
 	                                      "Ausrichtung",
 	                                      "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
 	if (event == ON_ENTRY)
-		initMenuItem(menuItem, 0, 4);
+		initMenuItem(menuItem, 0, 5);
 
 	else if (event & CHANGE && event & INPUT_MASK) { // only react to button presses
-		if (advance(event, menuItem, 4)) {
+		if (advance(event, menuItem, 5)) {
 			switch (menuItem) {
 			case 0:
-				TRANSITION(stateShiftMode);
+				TRANSITION(stateLanguageMenu);
 				break;
 			case 1:
-				TRANSITION(stateShiftSpeed);
+				TRANSITION(stateShiftMode);
 				break;
 			case 2:
-				TRANSITION(stateOrientationMenu);
+				TRANSITION(stateShiftSpeed);
 				break;
 			case 3:
+				TRANSITION(stateOrientationMenu);
+				break;
+			case 4:
 				next_menu_item = MENU_ITEM_PREV;
 				TRANSITION(stateMainMenu);
 				break;
@@ -620,7 +619,7 @@ void NameTagSM::stateButtonTest(byte event){
 void NameTagSM::stateResetSettings(byte event){
 	static const char* menuText[2][2] = {{"reset to factory settings ?",
 	                                      "return"},
-	                                     {"Zur""\x1f""cksetzen auf Werkeinstellungen ?",
+	                                     {"Zur""\x1f""cksetzen auf Werkseinstellungen ?",
 	                                      "Zur""\x1f""ck"}};
 	static char menuItem = 0;
 
