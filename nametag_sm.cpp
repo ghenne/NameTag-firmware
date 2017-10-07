@@ -22,7 +22,7 @@ char EE_names[8][MAX_TEXT_LEN] EEMEM = {
 };
 byte EE_shift_speed EEMEM = 5;
 byte EE_shift_mode EEMEM = NameTag::AUTO_SHIFT;
-byte EE_language EEMEM = 0;
+byte EE_language EEMEM = NameTagSM::default_language;
 byte EE_selected EEMEM = 0;
 byte EE_orientation EEMEM = 1;
 
@@ -31,7 +31,7 @@ byte EE_orientation EEMEM = 1;
 
 NameTagSM::NameTagSM(NameTag *display)
    : StateMachine(STATE_CAST(&NameTagSM::stateDefault))
-   , display(display), language(ENGLISH), next_menu_item(MENU_ITEM_DEFAULT)
+   , display(display), language(default_language), next_menu_item(MENU_ITEM_DEFAULT)
 {
 	// setup input pins
 	DDRB &= ~INPUT_MASK;
@@ -631,7 +631,7 @@ void NameTagSM::stateResetSettings(byte event){
 		if (advance(event, menuItem, 2)) {
 			switch (menuItem) {
 			case 0:
-				eeprom_update_byte(&EE_language, language = ENGLISH);
+				eeprom_update_byte(&EE_language, language = NameTagSM::default_language);
 				eeprom_update_byte(&EE_selected, selected_name = 0);
 				display->setShiftMode(NameTag::AUTO_SHIFT);
 				eeprom_update_byte(&EE_shift_mode, display->shiftMode());

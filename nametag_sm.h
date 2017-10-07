@@ -16,18 +16,9 @@
 class NameTag;
 class NameTagSM : public StateMachine
 {
+public:
 	enum Language {ENGLISH = 0, DEUTSCH = 1};
 
-	NameTag *display;
-	Language language;
-	unsigned long time;
-	char name_text[MAX_TEXT_LEN];
-	char num_buffer[10];
-	byte selected_name, edited_name;
-	byte edit_first_visible;
-	char next_menu_item;
-
-public:
 	NameTagSM(NameTag *display);
 
 private:
@@ -57,4 +48,14 @@ private:
 	void stateHelpMenu(byte event);
 	void stateDisplayTest(byte event);
 	void stateOrientationMenu(byte event);
+
+private:
+	NameTag *display;
+	Language language;
+	unsigned long time;
+	char name_text[MAX_TEXT_LEN];
+	char num_buffer[10];
+	byte selected_name, edited_name;
+	byte edit_first_visible;
+	char next_menu_item;
 };
