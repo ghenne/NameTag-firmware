@@ -512,7 +512,7 @@ void NameTagSM::stateEditChar(byte event){
 		else if(sel_char >= 46 && sel_char <= 51)				// Letter	p-u
 			name_text[3+display->getCursor()] = 'p' + sel_char - 46;
 		else if(sel_char >= 51 && sel_char <= 57)				// Letter	v-z
-			name_text[3+display->getCursor()] = 'v' + sel_char - 51;
+			name_text[3+display->getCursor()] = 'v' + sel_char - 53;
 		else if(sel_char == 58)									// Space
 			name_text[3+display->getCursor()] = ' ';
 		else if(sel_char >= 59 && sel_char <= 69)				// Nubers	0-9
