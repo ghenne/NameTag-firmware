@@ -9,19 +9,8 @@ add_avr_library(${PROJECT_NAME}
    names.h
 )
 
-if(1)
-
 add_avr_executable(main
    main.cpp
    nametag_sm.cpp
 )
-target_link_libraries(main${MCU_TYPE_FOR_FILENAME}.elf ${PROJECT_NAME}${MCU_TYPE_FOR_FILENAME})
-
-else()
-
-add_avr_executable(maintest
-   maintest.cpp
-)
-target_link_libraries(maintest${MCU_TYPE_FOR_FILENAME}.elf ${PROJECT_NAME}${MCU_TYPE_FOR_FILENAME})
-
-endif()
+target_link_libraries(main ${PROJECT_NAME})
