@@ -5,7 +5,7 @@
 Ö ""\x1e""
 Ü ""\x1f""
 */
-#define NAME1 "Tekkietorium - Technik entsteht, Bit f""\x1f""r Bit"
+#define NAME1 "Friedrich"
 #define NAME2 ""
 #define NAME3 ""
 #define NAME4 ""

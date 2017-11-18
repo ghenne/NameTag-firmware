@@ -20,7 +20,7 @@ char EE_names[8][MAX_TEXT_LEN] EEMEM = {
    "7: " NAME7,
    "8: " NAME8
 };
-byte EE_shift_speed EEMEM = 5;
+byte EE_shift_speed EEMEM = 15;
 byte EE_shift_mode EEMEM = NameTag::AUTO_SHIFT;
 byte EE_language EEMEM = NameTagSM::default_language;
 byte EE_selected EEMEM = 0;
