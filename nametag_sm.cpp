@@ -664,7 +664,7 @@ void NameTagSM::stateResetSettings(byte event){
 
 void NameTagSM::stateHelpMenu(byte event){
 	 static const char* menuText[2][3] = {{"www.tekkietorium.de",
-	                                      "tekkietorim@gmx.de",
+	                                      "tekkietorium@gmx.de",
 	                                       "return"
 	                                     },
 	                                     {"www.tekkietorium.de",
